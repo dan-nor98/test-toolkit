@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Iranian Data Generator",
+  "version": "1.0.0",
+  "description": "Generate random Iranian phone numbers, national codes, bank cards, and Sheba numbers",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Iranian Data Generator"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": []
+}
