@@ -3,6 +3,8 @@
  * Handles clipboard logging with IndexedDB
  */
 
+importScripts('generators.js');
+
 const DB_NAME = 'ClipboardDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'logs';
@@ -80,5 +82,117 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: false, error: error.message });
       });
     return true; // Keep channel open for async response
+  }
+});
+
+/**
+ * ---------------------------------
+ * Context Menu (Generator) Logic
+ * ---------------------------------
+ */
+
+// Create the context menus on install
+chrome.runtime.onInstalled.addListener(() => {
+  console.log('DevToolkit Pro: Setting up context menus...');
+  
+  // Create a parent menu
+  chrome.contextMenus.create({
+    id: "DEVTOOLKIT_PARENT",
+    title: "DevToolkit: Generate Data",
+    contexts: ["editable"] // Only show when right-clicking an editable field
+  });
+
+  // Add sub-menus for each generator
+  chrome.contextMenus.create({
+    id: "generate-name",
+    parentId: "DEVTOOLKIT_PARENT",
+    title: "Persian Name",
+    contexts: ["editable"]
+  });
+
+  chrome.contextMenus.create({
+    id: "generate-phone",
+    parentId: "DEVTOOLKIT_PARENT",
+    title: "Phone Number",
+    contexts: ["editable"]
+  });
+
+  chrome.contextMenus.create({
+    id: "generate-nationalCode",
+    parentId: "DEVTOOLKIT_PARENT",
+    title: "National Code",
+    contexts: ["editable"]
+  });
+
+  chrome.contextMenus.create({
+    id: "generate-bankCard",
+    parentId: "DEVTOOLKIT_PARENT",
+    title: "Bank Card",
+    contexts: ["editable"]
+  });
+
+  chrome.contextMenus.create({
+    id: "generate-sheba",
+    parentId: "DEVTOOLKIT_PARENT",
+    title: "Sheba (IBAN)",
+    contexts: ["editable"]
+  });
+
+  chrome.contextMenus.create({
+    id: "generate-email",
+    parentId: "DEVTOOLKIT_PARENT",
+    title: "Email",
+    contexts: ["editable"]
+  });
+
+  chrome.contextMenus.create({
+    id: "generate-password",
+    parentId: "DEVTOOLKIT_PARENT",
+    title: "Password",
+    contexts: ["editable"]
+  });
+});
+
+// Listen for a click on one of our context menu items
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (!tab.id) return;
+
+  let generatedText = '';
+  
+  try {
+    switch (info.menuItemId) {
+      case 'generate-name':
+        generatedText = DataGenerators.generateName();
+        break;
+      case 'generate-phone':
+        generatedText = DataGenerators.generatePhoneNumber();
+        break;
+      case 'generate-nationalCode':
+        generatedText = DataGenerators.generateNationalCode();
+        break;
+      case 'generate-bankCard':
+        generatedText = DataGenerators.generateBankCardNumber();
+        break;
+      case 'generate-sheba':
+        generatedText = DataGenerators.generateShebaNumber();
+        break;
+      case 'generate-email':
+        generatedText = DataGenerators.generateEmail();
+        break;
+      case 'generate-password':
+        generatedText = DataGenerators.generatePassword();
+        break;
+      default:
+        return; // Not one of our menus
+    }
+
+    // Send a message to the content script in the active tab
+    chrome.tabs.sendMessage(tab.id, {
+      type: 'INSERT_GENERATED_TEXT',
+      text: generatedText
+    });
+
+  } catch (error) {
+    console.log('DevToolkit: Context menu generation failed', error);
   }
 });

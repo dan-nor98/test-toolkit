@@ -215,6 +215,35 @@ class DataGenerators {
   static formatIBAN(iban) {
     return iban.match(/.{1,4}/g).join(' ');
   }
+
+  /**
+   * Generate secure random password
+   * Default: 16 chars, upper, lower, numbers, symbols
+   */
+  static generatePassword() {
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lower = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    const all = upper + lower + numbers + symbols;
+
+    const length = 16;
+    let password = '';
+
+    // Ensure at least one of each type
+    password += upper[Math.floor(Math.random() * upper.length)];
+    password += lower[Math.floor(Math.random() * lower.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += symbols[Math.floor(Math.random() * symbols.length)];
+
+    // Fill remaining length
+    for (let i = 4; i < length; i++) {
+      password += all[Math.floor(Math.random() * all.length)];
+    }
+
+    // Shuffle the password
+    return password.split('').sort(() => 0.5 - Math.random()).join('');
+  }
 }
 
 // Export for use in popup

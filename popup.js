@@ -5,7 +5,7 @@
 class PopupController {
   constructor(pageId) { // MODIFIED: Accept pageId
     this.db = null;
-    this.currentTab = 'clipboard';
+    this.currentTab = 'generator';
     this.clipboardEntries = [];
     
     // Route logic based on which page is loaded
@@ -208,6 +208,9 @@ class PopupController {
           break;
         case 'email':
           value = DataGenerators.generateEmail();
+          break;
+        case 'password':
+          value = DataGenerators.generatePassword();
           break;
         default:
           throw new Error('Unknown generator type');

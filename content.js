@@ -48,3 +48,32 @@ document.addEventListener('copy', handleCopy, { passive: true });
 window.addEventListener('beforeunload', () => {
   document.removeEventListener('copy', handleCopy);
 });
+
+/**
+ * Listen for messages from the background script
+ * to insert generated text.
+ */
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'INSERT_GENERATED_TEXT') {
+    const activeEl = document.activeElement;
+    
+    // Check if the active element is an input or textarea
+    if (activeEl && (activeEl.tagName.toLowerCase() === 'input' || activeEl.tagName.toLowerCase() === 'textarea')) {
+      
+      // Set the value
+      activeEl.value = message.text;
+      
+      // Dispatch events to notify frameworks (like React) of the change
+      activeEl.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+      activeEl.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+      
+      sendResponse({ success: true });
+    } else {
+      console.log('DevToolkit: No editable element focused to insert text.');
+      sendResponse({ success: false, error: 'No active editable element' });
+    }
+  }
+  
+  // Return true to indicate async response (though we don't use it here, it's good practice)
+  return true; 
+});
