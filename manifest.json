@@ -1,16 +1,34 @@
 {
   "manifest_version": 3,
-  "name": "Iranian Data Generator",
-  "version": "1.0.0",
-  "description": "Generate random Iranian phone numbers, national codes, bank cards, and Sheba numbers",
+  "name": "DevToolkit Pro",
+  "version": "2.0.0",
+  "description": "Professional developer toolkit for clipboard management, data generation, and API testing",
+  "permissions": [
+    "storage",
+    "contextMenus"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Iranian Data Generator"
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "permissions": []
+  }
 }

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Tester - DevToolkit Pro</title>
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    /* Override popup constraints for the new tab */
+    body {
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+      min-height: 100vh;
+      max-height: none;
+      resize: none;
+      padding: 24px;
+    }
+    .container {
+      height: auto;
+    }
+    /* Make the API tab content visible by default */
+    #tab-api {
+      display: block !important;
+      padding: 0;
+    }
+  </style>
+</head>
+<body id="api-tester-body">
+  <div class="container">
+
+    <div id="tab-api"> 
+      <div class="tab-header">
+        <h2 class="tab-title">API Tester</h2>
+      </div>
+      
+      <div class="api-container">
+        <label class="input-label">Paste cURL Command</label>
+        <textarea id="curlInput" class="curl-input" placeholder="curl 'https://api.example.com/endpoint' \&#10;  -H 'Content-Type: application/json' \&#10;  --data-raw '{&quot;key&quot;:&quot;value&quot;}'"></textarea>
+        
+        <button id="executeCurl" class="btn btn-primary btn-block">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Execute Request
+        </button>
+        
+        <div id="apiResponse" class="api-response" style="display: none;">
+          <div class="response-header">
+            <label class="output-label">Response</label>
+            <div class="response-meta">
+              <span id="responseStatus" class="status-badge"></span>
+              <span id="responseTime" class="time-badge"></span>
+            </div>
+          </div>
+          <pre id="responseBody" class="response-body"></pre>
+        </div>
+      </div>
+    </div>
+    
+  </div> <div id="toast" class="toast">
+    <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id="toastMessage">Copied to clipboard!</span>
+  </div>
+
+  <script src="generators.js"></script>
+  <script src="curlParser.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

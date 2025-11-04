@@ -1,42 +1,172 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iranian Data Generator</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>DevToolkit Pro</title>
+  <link rel="stylesheet" href="popup.css">
 </head>
-<body>
+<body id="popup-body">
   <div class="container">
-    <h1>تولید اطلاعات تست</h1>
-    
-    <div class="generator-section">
-      <button id="generatePhone" class="btn">تولید شماره موبایل</button>
-      <input type="text" id="phoneResult" readonly class="result-input">
+    <header class="header">
+      <div class="header-content">
+        <h1 class="title">DevToolkit Pro</h1>
+        <p class="subtitle">Professional Developer Utilities</p>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn" data-tab="clipboard">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+        </svg>
+        <span>Clipboard</span>
+      </button>
+      <button class="tab-btn active" data-tab="generator">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M1 12h6m6 0h6M4.8 4.8l4.2 4.2m6 0l4.2-4.2M4.8 19.2l4.2-4.2m6 0l4.2 4.2"></path>
+        </svg>
+        <span>Generator</span>
+      </button>
+      <button class="tab-btn" data-tab="api">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>API Tester</span>
+      </button>
+    </nav>
+
+    <div id="tab-clipboard" class="tab-content">
+      <div class="tab-header">
+        <h2 class="tab-title">Clipboard History</h2>
+        <button id="clearClipboard" class="btn btn-danger btn-sm" title="Clear all clipboard entries">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Clear All
+        </button>
+      </div>
+      <div id="clipboardList" class="clipboard-list">
+        <div class="empty-state">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          </svg>
+          <p>No clipboard entries yet</p>
+          <small>Copy text anywhere to start logging</small>
+        </div>
+      </div>
     </div>
 
-    <div class="generator-section">
-      <button id="generateName" class="btn">تولید نام</button>
-      <input type="text" id="nameResult" readonly class="result-input">
+    <div id="tab-generator" class="tab-content active">
+      <div class="tab-header">
+        <h2 class="tab-title">Data Generator</h2>
+      </div>
+      
+      <div class="generator-grid">
+        <button class="gen-btn" data-type="name">
+          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Persian Name</span>
+        </button>
+        
+        <button class="gen-btn" data-type="phone">
+          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+          <span>Phone Number</span>
+        </button>
+        
+        <button class="gen-btn" data-type="nationalCode">
+          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span>National Code</span>
+        </button>
+        
+        <button class="gen-btn" data-type="bankCard">
+          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+          <span>Bank Card</span>
+        </button>
+        
+        <button class="gen-btn" data-type="sheba">
+          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          <span>Sheba (IBAN)</span>
+        </button>
+        
+        <button class="gen-btn" data-type="email">
+          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <span>Email</span>
+        </button>
+
+        <button class="gen-btn" data-type="password">
+          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Password</span>
+        </button>
+      </div>
+      
+      <div id="generatorOutput" class="output-container" style="display: none;">
+        <div class="output-header">
+          <label class="output-label">Generated Data</label>
+          <button id="copyOutput" class="btn btn-primary btn-sm">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy
+          </button>
+        </div>
+        <div id="outputValue" class="output-value"></div>
+      </div>
     </div>
 
-    <div class="generator-section">
-      <button id="generateNationalCode" class="btn">تولید کد ملی</button>
-      <input type="text" id="nationalCodeResult" readonly class="result-input">
-    </div>
-
-    <div class="generator-section">
-      <button id="generateBankCard" class="btn">تولید شماره کارت</button>
-      <input type="text" id="bankCardResult" readonly class="result-input">
-    </div>
-
-    <div class="generator-section">
-      <button id="generateSheba" class="btn">تولید شماره شبا</button>
-      <input type="text" id="shebaResult" readonly class="result-input">
+    <div id="tab-api" class="tab-content">
+      <div class="empty-state" style="padding: 40px 20px;">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        <p>API Tester runs in a new tab</p>
+        <small>This provides more space for requests and responses.</small>
+        <button id="openApiTab" class="btn btn-primary" style="margin-top: 20px;">
+          Open API Tester
+        </button>
+      </div>
     </div>
   </div>
 
-  <script src="generator.js"></script>
+  <div id="toast" class="toast">
+    <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id="toastMessage">Copied to clipboard!</span>
+  </div>
+
+  <script src="generators.js"></script>
+  <script src="curlParser.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
