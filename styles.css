@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 body {
   width: 400px;
   padding: 15px;
@@ -59,3 +60,66 @@ h1 {
   background-color: #f9f9f9;
   box-sizing: border-box;
 }
+=======
+body {
+  width: 400px;
+  padding: 15px;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.container {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-top: 0;
+  font-size: 20px;
+}
+
+.generator-section {
+  margin-bottom: 15px;
+}
+
+.btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.result-input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  background-color: #f9f9f9;
+  box-sizing: border-box;
+}
+>>>>>>> Danial/main
