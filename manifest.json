@@ -5,7 +5,10 @@
   "description": "Professional developer toolkit for clipboard management, data generation, and API testing",
   "permissions": [
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "contextMenus",
+    "scripting",
+    "tabs"
   ],
   "host_permissions": ["<all_urls>"],
   "background": {

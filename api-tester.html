@@ -3,66 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API Tester - DevToolkit Pro</title>
+  <title>API Tester - DevToolkit</title>
   <link rel="stylesheet" href="popup.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <style>
-    /* Override popup constraints for the new tab */
+    /* Reset body for the full-screen layout */
     body {
       width: 100%;
-      min-width: 0;
-      max-width: none;
-      min-height: 100vh;
-      max-height: none;
-      resize: none;
-      padding: 24px;
-    }
-    .container {
-      height: auto;
-    }
-    /* Make the API tab content visible by default */
-    #tab-api {
-      display: block !important;
-      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+      background: var(--bg-app);
     }
   </style>
 </head>
 <body id="api-tester-body">
-  <div class="container">
+  
+  <div class="api-wrapper">
+    <aside class="api-sidebar">
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">Collections</h3>
+        <ul id="collectionList" class="req-list">
+          </ul>
+      </div>
+      <div class="sidebar-section" style="border-bottom: none; flex: 1; overflow-y: auto;">
+        <h3 class="sidebar-title">History</h3>
+        <ul id="historyList" class="req-list">
+          </ul>
+      </div>
+    </aside>
 
-    <div id="tab-api"> 
-      <div class="tab-header">
-        <h2 class="tab-title">API Tester</h2>
+    <main class="api-main">
+      <div class="tab-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
+        <h2 class="title" style="font-size: 20px;">API Tester</h2>
+        <div style="display: flex; gap: 8px;">
+          <button id="saveRequestBtn" class="btn btn-primary" style="background: var(--bg-surface); border: 1px solid var(--border-subtle);">
+            <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Save
+          </button>
+          <button id="executeCurl" class="btn btn-primary">
+            <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Run
+          </button>
+        </div>
       </div>
       
       <div class="api-container">
-        <label class="input-label">Paste cURL Command</label>
-        <textarea id="curlInput" class="curl-input" placeholder="curl 'https://api.example.com/endpoint' \&#10;  -H 'Content-Type: application/json' \&#10;  --data-raw '{&quot;key&quot;:&quot;value&quot;}'"></textarea>
+        <div>
+          <label class="output-label">cURL Command</label>
+          <textarea id="curlInput" class="curl-input" placeholder="curl 'https://api.example.com/endpoint' \..." style="height: 150px; font-family: var(--font-mono);"></textarea>
+        </div>
         
-        <button id="executeCurl" class="btn btn-primary btn-block">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-          </svg>
-          Execute Request
-        </button>
-        
-        <div id="apiResponse" class="api-response" style="display: none;">
-          <div class="response-header">
+        <div id="apiResponse" class="output-container" style="display: none;">
+          <div class="output-header">
             <label class="output-label">Response</label>
-            <div class="response-meta">
-              <span id="responseStatus" class="status-badge"></span>
-              <span id="responseTime" class="time-badge"></span>
+            <div style="display: flex; gap: 8px;">
+              <span id="responseStatus" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #334155;"></span>
+              <span id="responseTime" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #334155;"></span>
             </div>
           </div>
-          <pre id="responseBody" class="response-body"></pre>
+          <pre id="responseBody" class="output-value" style="max-height: 500px; overflow: auto;"></pre>
         </div>
       </div>
-    </div>
-    
-  </div> <div id="toast" class="toast">
+    </main>
+  </div>
+
+  <div id="toast" class="toast">
     <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
-    <span id="toastMessage">Copied to clipboard!</span>
+    <span id="toastMessage">Action Successful</span>
   </div>
 
   <script src="generators.js"></script>

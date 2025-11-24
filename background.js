@@ -155,7 +155,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Listen for a click on one of our context menu items
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (!tab.id) return;
+  if (!tab || !tab.id) return;
 
   let generatedText = '';
   
@@ -183,14 +183,19 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         generatedText = DataGenerators.generatePassword();
         break;
       default:
-        return; // Not one of our menus
+        return; 
     }
 
-    // Send a message to the content script in the active tab
-    chrome.tabs.sendMessage(tab.id, {
-      type: 'INSERT_GENERATED_TEXT',
-      text: generatedText
-    });
+    // FIXED: Added frameId to target specific frames (iframes)
+    if (generatedText) {
+      chrome.tabs.sendMessage(tab.id, {
+        type: 'INSERT_GENERATED_TEXT',
+        text: generatedText
+      }, { frameId: info.frameId }).catch(err => {
+        // This usually happens if the page needs a refresh
+        console.log('DevToolkit: Could not insert text. Page might need refresh.', err);
+      });
+    }
 
   } catch (error) {
     console.log('DevToolkit: Context menu generation failed', error);

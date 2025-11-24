@@ -5,164 +5,163 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DevToolkit Pro</title>
   <link rel="stylesheet" href="popup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 </head>
 <body id="popup-body">
   <div class="container">
     <header class="header">
-      <div class="header-content">
-        <h1 class="title">DevToolkit Pro</h1>
-        <p class="subtitle">Professional Developer Utilities</p>
+      <div>
+        <h1 class="title">DevToolkit</h1>
+        <p class="subtitle">Developer Utilities</p>
       </div>
-    </header>
+      </header>
 
     <nav class="tabs">
       <button class="tab-btn" data-tab="clipboard">
-        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-        </svg>
         <span>Clipboard</span>
       </button>
       <button class="tab-btn active" data-tab="generator">
-        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M1 12h6m6 0h6M4.8 4.8l4.2 4.2m6 0l4.2-4.2M4.8 19.2l4.2-4.2m6 0l4.2 4.2"></path>
-        </svg>
         <span>Generator</span>
       </button>
       <button class="tab-btn" data-tab="api">
-        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="2" y1="12" x2="22" y2="12"></line>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-        </svg>
-        <span>API Tester</span>
+        <span>API</span>
+      </button>
+      <button class="tab-btn" data-tab="json">
+        <span>JSON</span>
       </button>
     </nav>
 
     <div id="tab-clipboard" class="tab-content">
       <div class="tab-header">
-        <h2 class="tab-title">Clipboard History</h2>
-        <button id="clearClipboard" class="btn btn-danger btn-sm" title="Clear all clipboard entries">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-          </svg>
-          Clear All
-        </button>
+        <input type="search" id="clipboardSearch" placeholder="Search history..." style="max-width: 200px;">
+        <button id="clearClipboard" class="btn btn-danger btn-sm">Clear</button>
       </div>
       <div id="clipboardList" class="clipboard-list">
-        <div class="empty-state">
-          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-          </svg>
-          <p>No clipboard entries yet</p>
-          <small>Copy text anywhere to start logging</small>
         </div>
-      </div>
     </div>
 
     <div id="tab-generator" class="tab-content active">
       <div class="tab-header">
         <h2 class="tab-title">Data Generator</h2>
+        
+        <label class="toggle" title="Automatically copy result to clipboard">
+          <input type="checkbox" id="autoCopyToggle" class="toggle-input">
+          <div class="toggle-track">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="toggle-text">Auto Copy</span>
+        </label>
       </div>
-      
-      <div class="generator-grid">
-        <button class="gen-btn" data-type="name">
-          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
+      <div class="gen-container"> 
+        
+        <button class="gen-item" data-type="name">
+          <svg class="gen-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           <span>Persian Name</span>
         </button>
         
-        <button class="gen-btn" data-type="phone">
-          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-          </svg>
-          <span>Phone Number</span>
+        <button class="gen-item" data-type="phone">
+          <svg class="gen-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          <span>Phone</span>
         </button>
         
-        <button class="gen-btn" data-type="nationalCode">
-          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
+        <button class="gen-item" data-type="nationalCode">
+          <svg class="gen-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
           <span>National Code</span>
         </button>
         
-        <button class="gen-btn" data-type="bankCard">
-          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-            <line x1="1" y1="10" x2="23" y2="10"></line>
-          </svg>
+        <button class="gen-item" data-type="bankCard">
+          <svg class="gen-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
           <span>Bank Card</span>
         </button>
         
-        <button class="gen-btn" data-type="sheba">
-          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="1" x2="12" y2="23"></line>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-          </svg>
+        <button class="gen-item" data-type="sheba">
+          <svg class="gen-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
           <span>Sheba (IBAN)</span>
         </button>
         
-        <button class="gen-btn" data-type="email">
-          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-            <polyline points="22,6 12,13 2,6"></polyline>
-          </svg>
+        <button class="gen-item" data-type="email">
+          <svg class="gen-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
           <span>Email</span>
         </button>
 
-        <button class="gen-btn" data-type="password">
-          <svg class="gen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-          <span>Password</span>
+        <button class="gen-item" data-type="uuid">
+          <svg class="gen-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4m-2.83-7.07l-2.83 2.83M16.24 16.24l-2.83 2.83"></path></svg>
+          <span>UUID v4</span>
         </button>
+
+        <div class="gen-item-group">
+          <div class="gen-item-group__header">
+  
+            <button class="gen-item" data-type="password" style="flex-grow: 1;">
+              <svg class="gen-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11V7a5 5 0 0 1 10 0v4"></path><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect></svg>
+              <span>Generate Password</span>
+            </button>
+
+            <button class="gen-item__toggle-btn" aria-expanded="false" aria-controls="password-options" title="Options">
+              <svg class="gen-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+          </div>
+  
+          <div class="gen-item-group__options" id="password-options" hidden>
+            <label><input type="checkbox" class="gen-opt-pass-upper" checked> ABC</label>
+            <label><input type="checkbox" class="gen-opt-pass-lower" checked> abc</label>
+            <label><input type="checkbox" class="gen-opt-pass-num" checked> 123</label>
+            <label><input type="checkbox" class="gen-opt-pass-sym" checked> #$&</label>
+            <label style="margin-left:auto;">Len: <input type="number" class="gen-opt-pass-len" value="16" min="4" max="128" style="width: 50px; padding: 2px 4px;"></label>
+          </div>
+        </div>
       </div>
       
       <div id="generatorOutput" class="output-container" style="display: none;">
         <div class="output-header">
-          <label class="output-label">Generated Data</label>
-          <button id="copyOutput" class="btn btn-primary btn-sm">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            Copy
-          </button>
+          <label class="output-label">Result</label>
+          <button id="copyOutput" class="btn btn-primary btn-sm">Copy</button>
         </div>
         <div id="outputValue" class="output-value"></div>
       </div>
     </div>
 
+    <div id="tab-json" class="tab-content">
+      <div class="tab-header">
+        <h2 class="tab-title">JSON Formatter</h2>
+        <button id="formatJsonBtn" class="btn btn-primary btn-sm">Format</button>
+      </div>
+      <textarea id="jsonInput" class="curl-input" placeholder="Paste your JSON here..." style="min-height: 150px;"></textarea>
+      
+      <div id="jsonResponse" class="output-container" style="display: none; border-top: none; padding-top: 10px;">
+        <div class="output-header">
+          <label class="output-label">Formatted</label>
+          <button id="copyJsonOutput" class="btn btn-primary btn-sm">Copy</button>
+        </div>
+        <pre id="jsonOutput" class="output-value" style="max-height: 250px; overflow: auto;"></pre>
+      </div>
+    </div>
+
     <div id="tab-api" class="tab-content">
-      <div class="empty-state" style="padding: 40px 20px;">
-        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div style="text-align: center; padding-top: 60px;">
+        <svg style="width: 48px; height: 48px; color: var(--text-muted); opacity: 0.5; margin-bottom: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
           <polyline points="15 3 21 3 21 9"></polyline>
           <line x1="10" y1="14" x2="21" y2="3"></line>
         </svg>
-        <p>API Tester runs in a new tab</p>
-        <small>This provides more space for requests and responses.</small>
-        <button id="openApiTab" class="btn btn-primary" style="margin-top: 20px;">
-          Open API Tester
+        <p style="color: var(--text-muted); font-size: 13px;">API Tester requires more space.</p>
+        <button id="openApiTab" class="btn btn-primary" style="margin-top: 12px;">
+          Open in New Tab
         </button>
       </div>
     </div>
   </div>
 
   <div id="toast" class="toast">
-    <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: var(--success);">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
-    <span id="toastMessage">Copied to clipboard!</span>
+    <span id="toastMessage">Copied!</span>
   </div>
 
   <script src="generators.js"></script>
