@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DevToolkit Pro",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Professional developer toolkit for clipboard management, data generation, and API testing",
   "permissions": [
     "storage",
@@ -17,7 +17,8 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "css": ["content.css"],
+      "js": ["generators.js", "content.js"],
       "run_at": "document_end"
     }
   ],

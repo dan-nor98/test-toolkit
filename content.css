@@ -1,0 +1,37 @@
+
+/* DevToolkit Pro - Floating Autofill Icon */
+.dt-autofill-btn {
+  position: absolute;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #3b82f6; /* Blue Primary */
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none; /* Ignore clicks when hidden */
+}
+
+.dt-autofill-btn.visible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.dt-autofill-btn:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+}
+
+.dt-autofill-icon {
+  width: 14px;
+  height: 14px;
+  color: white;
+  pointer-events: none;
+}
