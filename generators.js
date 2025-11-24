@@ -220,32 +220,71 @@ class DataGenerators {
    * Generate secure random password
    * Default: 16 chars, upper, lower, numbers, symbols
    */
-  static generatePassword() {
-    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lower = 'abcdefghijklmnopqrstuvwxyz';
-    const numbers = '0123456789';
-    const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-    const all = upper + lower + numbers + symbols;
+  /**
+   * Generate secure random password
+   * (MODIFIED: Now accepts options)
+   */
+  static generatePassword(options = {}) {
+    const defaults = {
+      length: 16,
+      useUpper: true,
+      useLower: true,
+      useNumbers: true,
+      useSymbols: true
+    };
+    const config = { ...defaults, ...options };
 
-    const length = 16;
+    const charSets = {
+      upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      lower: 'abcdefghijklmnopqrstuvwxyz',
+      numbers: '0123456789',
+      symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+    };
+
     let password = '';
+    let all = '';
 
     // Ensure at least one of each type
-    password += upper[Math.floor(Math.random() * upper.length)];
-    password += lower[Math.floor(Math.random() * lower.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-    password += symbols[Math.floor(Math.random() * symbols.length)];
+    if (config.useUpper) {
+      password += charSets.upper[Math.floor(Math.random() * charSets.upper.length)];
+      all += charSets.upper;
+    }
+    if (config.useLower) {
+      password += charSets.lower[Math.floor(Math.random() * charSets.lower.length)];
+      all += charSets.lower;
+    }
+    if (config.useNumbers) {
+      password += charSets.numbers[Math.floor(Math.random() * charSets.numbers.length)];
+      all += charSets.numbers;
+    }
+    if (config.useSymbols) {
+      password += charSets.symbols[Math.floor(Math.random() * charSets.symbols.length)];
+      all += charSets.symbols;
+    }
+    
+    if (all === '') {
+      throw new Error('No character types selected');
+    }
 
     // Fill remaining length
-    for (let i = 4; i < length; i++) {
+    for (let i = password.length; i < config.length; i++) {
       password += all[Math.floor(Math.random() * all.length)];
     }
 
     // Shuffle the password
     return password.split('').sort(() => 0.5 - Math.random()).join('');
+  } // <-- Ensure this closing brace is here!
+
+  /**
+   * Generate a v4 UUID
+   */
+  static generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 }
-
 // Export for use in popup
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = DataGenerators;
