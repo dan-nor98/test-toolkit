@@ -201,3 +201,19 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     console.log('DevToolkit: Context menu generation failed', error);
   }
 });
+
+// NEW: Keyboard Shortcut Listener
+chrome.commands.onCommand.addListener((command) => {
+  if (command === 'smart-fill') {
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      if (tabs[0]) {
+        // Send message to the active tab's content script
+        chrome.tabs.sendMessage(tabs[0].id, { 
+          type: 'TRIGGER_SMART_FILL' 
+        }).catch(err => {
+          console.log('DevToolkit: Tab likely not ready or restricted', err);
+        });
+      }
+    });
+  }
+});

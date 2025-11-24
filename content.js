@@ -1,11 +1,39 @@
 /**
  * DevToolkit Pro - Content Script
- * Captures copy events and sends to background
+ * Fixed: Icon disappearing too fast (Race Condition)
  */
+
+// ==========================================
+// 1. CLIPBOARD LOGGING
+// ==========================================
 
 let lastCopiedText = '';
 const MIN_TEXT_LENGTH = 1;
 const MAX_TEXT_LENGTH = 10000;
+
+function handleCopy(e) {
+  try {
+    let text = '';
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim()) {
+      text = selection.toString().trim();
+    }
+    
+    if (!text || text.length < MIN_TEXT_LENGTH || text.length > MAX_TEXT_LENGTH || text === lastCopiedText) {
+      return;
+    }
+    
+    lastCopiedText = text;
+    chrome.runtime.sendMessage({ type: 'SAVE_CLIPBOARD', text: text }).catch(() => {});
+  } catch (error) {
+    console.log('DevToolkit: Copy handler error', error);
+  }
+}
+
+// ==========================================
+// 2. CONFIGURATION & HEURISTICS
+// ==========================================
+
 const FIELD_PATTERNS = {
   email: /email|mail|e-mail/i,
   name: /name|fullname|user|first.*name|last.*name/i,
@@ -16,53 +44,13 @@ const FIELD_PATTERNS = {
   password: /password|pass|pwd/i
 };
 
-function handleCopy(e) {
-  try {
-    let text = '';
-    
-    // Try to get selected text first
-    const selection = window.getSelection();
-    if (selection && selection.toString().trim()) {
-      text = selection.toString().trim();
-    }
-    
-    // Validate text
-    if (!text || 
-        text.length < MIN_TEXT_LENGTH || 
-        text.length > MAX_TEXT_LENGTH ||
-        text === lastCopiedText) {
-      return;
-    }
-    
-    lastCopiedText = text;
-    
-    // Send to background
-    chrome.runtime.sendMessage({
-      type: 'SAVE_CLIPBOARD',
-      text: text
-    }).catch((error) => {
-      // Log errors for development
-      console.log('DevToolkit: Message send failed', error);
-    });
-    
-  } catch (error) {
-    console.log('DevToolkit: Copy handler error', error);
-  }
-}
-
-// Listen for copy events
-document.addEventListener('copy', handleCopy, { passive: true });
-
-// Clean up on unload
-window.addEventListener('beforeunload', () => {
-  document.removeEventListener('copy', handleCopy);
-});
-
-
-// --- 2. UI MANAGEMENT ---
+// ==========================================
+// 3. UI MANAGEMENT (Floating Icon)
+// ==========================================
 
 let activeIcon = null;
 let currentInput = null;
+let hideTimeout = null; // NEW: Track the timer so we can cancel it
 
 function createAutofillIcon() {
   if (activeIcon) return activeIcon;
@@ -75,9 +63,8 @@ function createAutofillIcon() {
     </svg>
   `;
   
-  // Use mousedown to prevent input blur before click registers
   btn.addEventListener('mousedown', (e) => {
-    e.preventDefault(); // Stop focus loss
+    e.preventDefault(); 
     handleIconClick();
   });
 
@@ -87,12 +74,17 @@ function createAutofillIcon() {
 }
 
 function positionIcon(input) {
+  // NEW: Cancel any pending hide action immediately
+  if (hideTimeout) {
+    clearTimeout(hideTimeout);
+    hideTimeout = null;
+  }
+
   const btn = createAutofillIcon();
   const rect = input.getBoundingClientRect();
   const scrollY = window.scrollY;
   const scrollX = window.scrollX;
 
-  // Position inside the right edge of the input
   btn.style.top = `${rect.top + scrollY + (rect.height - 24) / 2}px`;
   btn.style.left = `${rect.right + scrollX - 30}px`;
   
@@ -107,184 +99,182 @@ function hideIcon() {
   }
 }
 
-// --- 3. LOGIC ---
+// ==========================================
+// 4. GENERATION LOGIC
+// ==========================================
 
-/**
- * Detects the type of input based on attributes
- */
+function generateValueByType(type) {
+  try {
+    switch (type) {
+      case 'email': return DataGenerators.generateEmail();
+      case 'phone': return DataGenerators.generatePhoneNumber();
+      case 'nationalCode': return DataGenerators.generateNationalCode();
+      case 'bankCard': return DataGenerators.generateBankCardNumber();
+      case 'sheba': return DataGenerators.generateShebaNumber();
+      case 'password': return DataGenerators.generatePassword();
+      case 'name': return DataGenerators.generateName();
+      default: return null;
+    }
+  } catch (e) {
+    console.error('Generator error:', e);
+    return null;
+  }
+}
+
 function detectFieldType(input) {
-  // Check explicit type first
   if (input.type === 'email') return 'email';
   if (input.type === 'password') return 'password';
   if (input.type === 'tel') return 'phone';
 
-  // Check attributes (id, name, placeholder, class)
   const attributes = [
     input.id, 
     input.name, 
     input.placeholder, 
-    input.className
+    input.className,
+    input.getAttribute('aria-label')
   ].join(' ');
 
   for (const [type, regex] of Object.entries(FIELD_PATTERNS)) {
     if (regex.test(attributes)) return type;
   }
-
   return null;
 }
 
-/**
- * Generates data and inserts it
- */
 function handleIconClick() {
   if (!currentInput) return;
-
   const type = detectFieldType(currentInput);
-  let value = '';
+  const value = generateValueByType(type || 'name'); 
 
-  try {
-    // Uses the globally available DataGenerators class (injected via manifest)
-    switch (type) {
-      case 'email': value = DataGenerators.generateEmail(); break;
-      case 'phone': value = DataGenerators.generatePhoneNumber(); break;
-      case 'nationalCode': value = DataGenerators.generateNationalCode(); break;
-      case 'bankCard': value = DataGenerators.generateBankCardNumber(); break;
-      case 'sheba': value = DataGenerators.generateShebaNumber(); break;
-      case 'password': value = DataGenerators.generatePassword(); break;
-      case 'name': value = DataGenerators.generateName(); break;
-      default: 
-        // Fallback: Random Name or just tell user?
-        // Let's generate a name as default if we aren't sure, 
-        // or you could open a mini-menu here.
-        value = DataGenerators.generateName(); 
-    }
-
+  if (value) {
     insertText(currentInput, value);
-    
-    // Visual feedback
-    const originalColor = activeIcon.style.backgroundColor;
-    activeIcon.style.backgroundColor = '#10b981'; // Green
-    setTimeout(() => {
-      activeIcon.style.backgroundColor = '';
-      hideIcon();
-    }, 500);
-
-  } catch (err) {
-    console.error('Generation failed', err);
+    flashInput(currentInput);
+    hideIcon();
   }
 }
 
-/**
- * Helper to safely insert text into different input types
- */
+function handleSmartFill() {
+  const active = document.activeElement;
+  if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA')) {
+    console.log('DevToolkit: Focus an input to use Smart Fill');
+    return;
+  }
+
+  const form = active.form || active.closest('form');
+
+  if (form) {
+    const inputs = form.querySelectorAll('input, textarea');
+    let fillCount = 0;
+
+    inputs.forEach(input => {
+      if (input.type === 'hidden' || input.type === 'submit' || input.disabled || input.readOnly) return;
+      if (input.value && input.value.trim() !== '') return;
+
+      const type = detectFieldType(input);
+      if (type) {
+        const value = generateValueByType(type);
+        if (value) {
+          insertText(input, value);
+          flashInput(input);
+          fillCount++;
+        }
+      }
+    });
+    
+    if (fillCount === 0) {
+      const type = detectFieldType(active) || 'name';
+      const val = generateValueByType(type);
+      if (val) {
+        insertText(active, val);
+        flashInput(active);
+      }
+    }
+  } else {
+    const type = detectFieldType(active);
+    const value = generateValueByType(type || 'name');
+    if (value) {
+      insertText(active, value);
+      flashInput(active);
+    }
+  }
+}
+
+// ==========================================
+// 5. DOM HELPERS
+// ==========================================
+
 function insertText(target, text) {
   if (target.isContentEditable) {
     target.focus();
     document.execCommand('insertText', false, text);
   } else {
-    // Standard inputs
     const start = target.selectionStart || 0;
     const end = target.selectionEnd || 0;
     const current = target.value;
-    
     target.value = current.substring(0, start) + text + current.substring(end);
     target.selectionStart = target.selectionEnd = start + text.length;
-    
-    // Trigger events for React/Angular/Vue
     target.dispatchEvent(new Event('input', { bubbles: true }));
     target.dispatchEvent(new Event('change', { bubbles: true }));
   }
 }
 
-// --- 4. EVENT LISTENERS ---
+function flashInput(element) {
+  element.style.transition = 'box-shadow 0.2s, background-color 0.2s';
+  const originalBoxShadow = element.style.boxShadow;
+  const originalBg = element.style.backgroundColor;
+  element.style.boxShadow = '0 0 0 2px #10b981';
+  element.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+  setTimeout(() => {
+    element.style.boxShadow = originalBoxShadow;
+    element.style.backgroundColor = originalBg;
+  }, 500);
+}
+
+// ==========================================
+// 6. EVENT LISTENERS
+// ==========================================
+
+document.addEventListener('copy', handleCopy, { passive: true });
 
 document.addEventListener('focusin', (e) => {
   const target = e.target;
-  
-  // Only handle inputs and textareas
   if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return;
-  
-  // Ignore hidden inputs, checkboxes, radios, read-only
-  if (target.type === 'hidden' || 
-      target.type === 'checkbox' || 
-      target.type === 'radio' ||
-      target.readOnly) return;
+  if (target.type === 'hidden' || target.type === 'checkbox' || target.type === 'radio' || target.readOnly) return;
 
   const type = detectFieldType(target);
-  
-  // Only show icon if we detected a known type
   if (type) {
     positionIcon(target);
   } else {
-    // Optional: You could show it for ALL inputs if you want a default 'Name' gen
-    // positionIcon(target); 
     hideIcon();
   }
-}, true); // Capture phase to catch all focus events
+}, true);
 
 document.addEventListener('focusout', (e) => {
-  // Small delay to allow clicking the icon before it disappears
-  setTimeout(() => {
-    // If the new focus is NOT our button, hide it
+  // NEW: Save the timeout ID so we can cancel it if needed
+  hideTimeout = setTimeout(() => {
     if (document.activeElement !== activeIcon) {
       hideIcon();
     }
-  }, 100);
+  }, 200); // Increased slightly to 200ms for better UX
 });
 
-// Update position on scroll/resize
 window.addEventListener('scroll', hideIcon, { passive: true });
 window.addEventListener('resize', hideIcon, { passive: true });
 
-/**
- * Listen for messages from the background script
- * to insert generated text.
- */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'INSERT_GENERATED_TEXT') {
     const activeEl = document.activeElement;
-    
-    if (!activeEl) {
-      console.log('DevToolkit: No active element found');
-      return;
+    if (activeEl) {
+      insertText(activeEl, message.text);
+      sendResponse({ success: true });
     }
-
-    try {
-      // 1. Handle ContentEditable (Rich Text, Divs, Spans)
-      // This covers Gmail, Notion, and most modern web editors
-      if (activeEl.isContentEditable) {
-        // execCommand is deprecated but is still the only reliable way 
-        // to preserve Undo/Redo history in contentEditable
-        document.execCommand('insertText', false, message.text);
-        sendResponse({ success: true });
-        return true;
-      }
-
-      // 2. Handle Standard Inputs & Textareas
-      if (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') {
-        const start = activeEl.selectionStart;
-        const end = activeEl.selectionEnd;
-        const currentValue = activeEl.value;
-
-        // Insert text at cursor position
-        activeEl.value = currentValue.substring(0, start) + 
-                         message.text + 
-                         currentValue.substring(end);
-
-        // Move cursor to end of inserted text
-        activeEl.selectionStart = activeEl.selectionEnd = start + message.text.length;
-
-        // Dispatch events to trigger framework updates (React, Vue, etc.)
-        activeEl.dispatchEvent(new Event('input', { bubbles: true }));
-        activeEl.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        sendResponse({ success: true });
-        return true;
-      }
-      
-    } catch (err) {
-      console.error('DevToolkit: Insertion failed', err);
-    }
+  } 
+  else if (message.type === 'TRIGGER_SMART_FILL') {
+    handleSmartFill();
+    sendResponse({ success: true });
   }
   return true;
+});
+
+window.addEventListener('beforeunload', () => {
+  document.removeEventListener('copy', handleCopy);
 });
