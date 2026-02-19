@@ -31,6 +31,9 @@
       <button class="tab-btn" data-tab="json">
         <span>JSON</span>
       </button>
+      <button class="tab-btn" data-tab="auth">
+        <span>Auth</span>
+      </button>
     </nav>
 
     <div id="tab-clipboard" class="tab-content">
@@ -139,6 +142,37 @@
           <button id="copyJsonOutput" class="btn btn-primary btn-sm">Copy</button>
         </div>
         <pre id="jsonOutput" class="output-value" style="max-height: 250px; overflow: auto;"></pre>
+      </div>
+    </div>
+
+
+    <div id="tab-auth" class="tab-content">
+      <div class="tab-header">
+        <h2 class="tab-title">Authenticator</h2>
+      </div>
+
+      <div class="auth-card">
+        <label class="output-label" for="authQrInput">Import from QR image</label>
+        <input id="authQrInput" type="file" accept="image/*">
+
+        <label class="output-label" for="authManualUri" style="margin-top: 12px;">Or paste Google Authenticator secret key / otpauth URI</label>
+        <textarea id="authManualUri" class="curl-input" placeholder="Google secret key like GYZT SMBX GE2D MNRU GM3T KOJQ GQ4D Q OR otpauth://totp/..." style="min-height: 80px;"></textarea>
+        <button id="loadAuthUri" class="btn btn-primary" style="margin-top: 10px;">Load Secret</button>
+      </div>
+
+      <div id="authDetails" class="output-container" style="display: none;">
+        <div class="auth-meta">
+          <div><span class="output-label">Issuer</span><div id="authIssuer" class="auth-meta-value">-</div></div>
+          <div><span class="output-label">Account</span><div id="authAccount" class="auth-meta-value">-</div></div>
+        </div>
+        <div class="auth-token-row">
+          <div id="authToken" class="auth-token">------</div>
+          <button id="copyAuthCode" class="btn btn-primary btn-sm">Copy</button>
+        </div>
+        <div class="auth-progress-wrap">
+          <div id="authProgress" class="auth-progress"></div>
+        </div>
+        <p id="authTimer" class="auth-timer">Refreshing in 30s</p>
       </div>
     </div>
 

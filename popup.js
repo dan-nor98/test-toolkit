@@ -8,6 +8,8 @@ class PopupController {
     this.currentTab = 'generator';
     this.clipboardEntries = [];
     this.isAutoCopy = localStorage.getItem('dt_auto_copy') === 'true';
+    this.authConfig = null;
+    this.authTimerInterval = null;
     
     if (pageId === 'popup-body') {
       this.initPopup();
@@ -21,6 +23,7 @@ class PopupController {
     this.setupPopupEventListeners();
     this.loadClipboardHistory();
     this.listenForUpdates();
+    this.setupAuthenticatorEventListeners();
 
     const toggle = document.getElementById('autoCopyToggle');
     if (toggle) {
@@ -117,6 +120,249 @@ class PopupController {
       chrome.tabs.create({ url: chrome.runtime.getURL('api-tester.html') });
       window.close(); 
     });
+  }
+
+  setupAuthenticatorEventListeners() {
+    document.getElementById('authQrInput')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      await this.loadAuthFromQrFile(file);
+      e.target.value = '';
+    });
+
+    document.getElementById('loadAuthUri')?.addEventListener('click', () => {
+      const uri = document.getElementById('authManualUri')?.value?.trim();
+      if (!uri) {
+        this.showToast('Paste Google Authenticator secret key or otpauth URI first', 'error');
+        return;
+      }
+      this.loadAuthenticatorFromUri(uri);
+    });
+
+    document.getElementById('copyAuthCode')?.addEventListener('click', () => {
+      const code = document.getElementById('authToken')?.dataset?.raw;
+      if (code) {
+        this.copyToClipboard(code);
+      }
+    });
+  }
+
+  async loadAuthFromQrFile(file) {
+    try {
+      if (!('BarcodeDetector' in window)) {
+        this.showToast('QR detection is not supported in this browser', 'error');
+        return;
+      }
+
+      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+      const bitmap = await createImageBitmap(file);
+      const barcodes = await detector.detect(bitmap);
+
+      if (!barcodes.length || !barcodes[0].rawValue) {
+        this.showToast('No QR code found in image', 'error');
+        return;
+      }
+
+      const uri = barcodes[0].rawValue.trim();
+      document.getElementById('authManualUri').value = uri;
+      this.loadAuthenticatorFromUri(uri);
+    } catch (error) {
+      this.showToast('Could not read QR code', 'error');
+      console.log('QR decode failed', error);
+    }
+  }
+
+  loadAuthenticatorFromUri(uri) {
+    try {
+      const config = this.parseOtpAuthUri(uri);
+      this.authConfig = config;
+
+      document.getElementById('authIssuer').textContent = config.issuer || '-';
+      document.getElementById('authAccount').textContent = config.account || '-';
+      document.getElementById('authDetails').style.display = 'block';
+
+      this.startAuthTicker();
+      this.showToast('Authenticator loaded');
+    } catch (error) {
+      this.showToast(error.message || 'Invalid otpauth URI', 'error');
+    }
+  }
+
+  parseOtpAuthUri(inputValue) {
+    const rawInput = (inputValue || '').trim();
+
+    // 1) Support plain Google Authenticator-style secret keys directly.
+    const directSecret = this.normalizeBase32Secret(rawInput);
+    if (directSecret) {
+      return this.createBase32Config(directSecret);
+    }
+
+    // 2) Support freeform text containing secret=... (e.g. copied setup snippets).
+    const extractedSecret = this.extractBase32Secret(rawInput);
+    if (extractedSecret) {
+      return this.createBase32Config(extractedSecret);
+    }
+
+    // 3) Support otpauth://totp URI.
+    let parsed;
+    try {
+      parsed = new URL(rawInput);
+    } catch {
+      throw new Error('Invalid input. Use Google Authenticator secret key or otpauth URI');
+    }
+
+    if (parsed.protocol !== 'otpauth:' || parsed.hostname !== 'totp') {
+      throw new Error('Only otpauth://totp URIs are supported');
+    }
+
+    const label = decodeURIComponent(parsed.pathname.replace(/^\//, ''));
+    const issuerFromLabel = label.includes(':') ? label.split(':')[0] : '';
+    const account = label.includes(':') ? label.split(':').slice(1).join(':') : label;
+
+    const secret = this.normalizeBase32Secret(parsed.searchParams.get('secret') || '');
+    if (!secret) {
+      throw new Error('Missing or invalid Base32 secret in URI');
+    }
+
+    const issuer = parsed.searchParams.get('issuer') || issuerFromLabel;
+    const digits = Number(parsed.searchParams.get('digits') || 6);
+    const period = Number(parsed.searchParams.get('period') || 30);
+    const algorithm = (parsed.searchParams.get('algorithm') || 'SHA1').toUpperCase();
+
+    if (![6, 7, 8].includes(digits)) throw new Error('Unsupported digits (use 6-8)');
+    if (!Number.isFinite(period) || period <= 0) throw new Error('Invalid period');
+    if (!['SHA1', 'SHA256', 'SHA512'].includes(algorithm)) throw new Error('Unsupported algorithm');
+
+    return { secret, issuer, account, digits, period, algorithm };
+  }
+
+  createBase32Config(secret) {
+    return {
+      secret,
+      issuer: 'Imported Secret',
+      account: 'Manual Entry',
+      digits: 6,
+      period: 30,
+      algorithm: 'SHA1'
+    };
+  }
+
+  normalizeBase32Secret(value) {
+    const normalized = (value || '')
+      .toUpperCase()
+      .replace(/\s+/g, '')
+      .replace(/-/g, '')
+      .replace(/=+$/g, '');
+
+    if (!normalized || !/^[A-Z2-7]+$/.test(normalized)) {
+      return '';
+    }
+
+    return normalized;
+  }
+
+  extractBase32Secret(text) {
+    if (!text) return '';
+
+    const secretMatch = text.match(/(?:^|[?&\s])secret\s*=\s*([A-Z2-7\s\-=]+)/i);
+    if (secretMatch?.[1]) {
+      return this.normalizeBase32Secret(secretMatch[1]);
+    }
+
+    return '';
+  }
+
+  startAuthTicker() {
+    if (this.authTimerInterval) {
+      clearInterval(this.authTimerInterval);
+    }
+
+    this.updateAuthToken();
+    this.authTimerInterval = setInterval(() => {
+      this.updateAuthToken();
+    }, 1000);
+  }
+
+  async updateAuthToken() {
+    if (!this.authConfig) return;
+
+    try {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const remaining = this.authConfig.period - (nowSec % this.authConfig.period);
+      const code = await this.generateTotpCode(this.authConfig, nowSec);
+
+      const tokenEl = document.getElementById('authToken');
+      const timerEl = document.getElementById('authTimer');
+      const progressEl = document.getElementById('authProgress');
+
+      tokenEl.textContent = this.formatOtpCode(code);
+      tokenEl.dataset.raw = code;
+      timerEl.textContent = `Refreshing in ${remaining}s`;
+      progressEl.style.width = `${((this.authConfig.period - remaining) / this.authConfig.period) * 100}%`;
+    } catch (error) {
+      this.showToast('Failed to generate OTP', 'error');
+      console.log('OTP generation error', error);
+    }
+  }
+
+  formatOtpCode(code) {
+    if (code.length !== 6) return code;
+    return `${code.slice(0, 3)} ${code.slice(3)}`;
+  }
+
+  async generateTotpCode(config, currentUnixSeconds) {
+    const counter = Math.floor(currentUnixSeconds / config.period);
+    const keyBytes = this.base32ToBytes(config.secret);
+    const algo = config.algorithm.replace('SHA', 'SHA-');
+
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: 'HMAC', hash: algo },
+      false,
+      ['sign']
+    );
+
+    const counterBuffer = new ArrayBuffer(8);
+    const counterView = new DataView(counterBuffer);
+    const high = Math.floor(counter / 0x100000000);
+    const low = counter >>> 0;
+    counterView.setUint32(0, high);
+    counterView.setUint32(4, low);
+
+    const signature = new Uint8Array(await crypto.subtle.sign('HMAC', key, counterBuffer));
+    const offset = signature[signature.length - 1] & 0x0f;
+
+    const binaryCode = (
+      ((signature[offset] & 0x7f) << 24) |
+      ((signature[offset + 1] & 0xff) << 16) |
+      ((signature[offset + 2] & 0xff) << 8) |
+      (signature[offset + 3] & 0xff)
+    ) >>> 0;
+
+    const otp = binaryCode % (10 ** config.digits);
+    return otp.toString().padStart(config.digits, '0');
+  }
+
+  base32ToBytes(input) {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    const cleaned = input.toUpperCase().replace(/=+$/g, '');
+
+    let bits = '';
+    for (const char of cleaned) {
+      const val = alphabet.indexOf(char);
+      if (val === -1) {
+        throw new Error('Invalid Base32 secret');
+      }
+      bits += val.toString(2).padStart(5, '0');
+    }
+
+    const bytes = [];
+    for (let i = 0; i + 8 <= bits.length; i += 8) {
+      bytes.push(parseInt(bits.slice(i, i + 8), 2));
+    }
+
+    return new Uint8Array(bytes);
   }
 
   setupApiTesterEventListeners() {
@@ -567,7 +813,13 @@ class PopupController {
   }
 }
 
+window.addEventListener('beforeunload', () => {
+  if (window.popupController?.authTimerInterval) {
+    clearInterval(window.popupController.authTimerInterval);
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   const pageId = document.body.id;
-  new PopupController(pageId); 
+  window.popupController = new PopupController(pageId); 
 });
