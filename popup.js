@@ -133,7 +133,7 @@ class PopupController {
     document.getElementById('loadAuthUri')?.addEventListener('click', () => {
       const uri = document.getElementById('authManualUri')?.value?.trim();
       if (!uri) {
-        this.showToast('Paste an otpauth URI first', 'error');
+        this.showToast('Paste Google Authenticator secret key or otpauth URI first', 'error');
         return;
       }
       this.loadAuthenticatorFromUri(uri);
@@ -188,12 +188,27 @@ class PopupController {
     }
   }
 
-  parseOtpAuthUri(uri) {
+  parseOtpAuthUri(inputValue) {
+    const rawInput = (inputValue || '').trim();
+
+    // 1) Support plain Google Authenticator-style secret keys directly.
+    const directSecret = this.normalizeBase32Secret(rawInput);
+    if (directSecret) {
+      return this.createBase32Config(directSecret);
+    }
+
+    // 2) Support freeform text containing secret=... (e.g. copied setup snippets).
+    const extractedSecret = this.extractBase32Secret(rawInput);
+    if (extractedSecret) {
+      return this.createBase32Config(extractedSecret);
+    }
+
+    // 3) Support otpauth://totp URI.
     let parsed;
     try {
-      parsed = new URL(uri);
+      parsed = new URL(rawInput);
     } catch {
-      throw new Error('Invalid URI format');
+      throw new Error('Invalid input. Use Google Authenticator secret key or otpauth URI');
     }
 
     if (parsed.protocol !== 'otpauth:' || parsed.hostname !== 'totp') {
@@ -204,9 +219,9 @@ class PopupController {
     const issuerFromLabel = label.includes(':') ? label.split(':')[0] : '';
     const account = label.includes(':') ? label.split(':').slice(1).join(':') : label;
 
-    const secret = (parsed.searchParams.get('secret') || '').replace(/\s+/g, '');
+    const secret = this.normalizeBase32Secret(parsed.searchParams.get('secret') || '');
     if (!secret) {
-      throw new Error('Missing secret in URI');
+      throw new Error('Missing or invalid Base32 secret in URI');
     }
 
     const issuer = parsed.searchParams.get('issuer') || issuerFromLabel;
@@ -219,6 +234,42 @@ class PopupController {
     if (!['SHA1', 'SHA256', 'SHA512'].includes(algorithm)) throw new Error('Unsupported algorithm');
 
     return { secret, issuer, account, digits, period, algorithm };
+  }
+
+  createBase32Config(secret) {
+    return {
+      secret,
+      issuer: 'Imported Secret',
+      account: 'Manual Entry',
+      digits: 6,
+      period: 30,
+      algorithm: 'SHA1'
+    };
+  }
+
+  normalizeBase32Secret(value) {
+    const normalized = (value || '')
+      .toUpperCase()
+      .replace(/\s+/g, '')
+      .replace(/-/g, '')
+      .replace(/=+$/g, '');
+
+    if (!normalized || !/^[A-Z2-7]+$/.test(normalized)) {
+      return '';
+    }
+
+    return normalized;
+  }
+
+  extractBase32Secret(text) {
+    if (!text) return '';
+
+    const secretMatch = text.match(/(?:^|[?&\s])secret\s*=\s*([A-Z2-7\s\-=]+)/i);
+    if (secretMatch?.[1]) {
+      return this.normalizeBase32Secret(secretMatch[1]);
+    }
+
+    return '';
   }
 
   startAuthTicker() {
