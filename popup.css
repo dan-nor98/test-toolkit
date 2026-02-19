@@ -554,3 +554,64 @@ textarea { font-family: var(--font-mono); font-size: 12px; }
   padding: 8px;
   opacity: 0.6;
 }
+/* --- Authenticator --- */
+.auth-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.auth-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.auth-meta-value {
+  font-size: 12px;
+  color: var(--text-main);
+  word-break: break-word;
+}
+
+.auth-token-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-token {
+  flex: 1;
+  background: #111;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 24px;
+  color: var(--success);
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.auth-progress-wrap {
+  margin-top: 10px;
+  height: 6px;
+  border-radius: 999px;
+  background: #111;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.auth-progress {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, var(--primary), #22d3ee);
+  transition: width 0.5s linear;
+}
+
+.auth-timer {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
