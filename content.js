@@ -50,55 +50,104 @@ window.addEventListener('beforeunload', () => {
 });
 
 
+const EDITABLE_INPUT_TYPES = new Set([
+  'text',
+  'search',
+  'url',
+  'tel',
+  'password',
+  'email',
+  'number'
+]);
+
+class AutofillManager {
+  static insertIntoActiveElement(text) {
+    const activeEl = document.activeElement;
+
+    if (!activeEl) {
+      console.log('DevToolkit: No active element found');
+      return false;
+    }
+
+    if (this.isContentEditable(activeEl)) {
+      return this.insertIntoContentEditable(activeEl, text);
+    }
+
+    if (this.isTextInput(activeEl)) {
+      return this.insertIntoTextInput(activeEl, text);
+    }
+
+    console.log('DevToolkit: Active element is not autofill-compatible');
+    return false;
+  }
+
+  static isContentEditable(element) {
+    return Boolean(element?.isContentEditable);
+  }
+
+  static isTextInput(element) {
+    if (!element || (element.tagName !== 'INPUT' && element.tagName !== 'TEXTAREA')) {
+      return false;
+    }
+
+    if (element.tagName === 'TEXTAREA') {
+      return true;
+    }
+
+    const type = (element.type || 'text').toLowerCase();
+    return EDITABLE_INPUT_TYPES.has(type);
+  }
+
+  static insertIntoContentEditable(element, text) {
+    element.focus();
+
+    // execCommand is deprecated but is still the only reliable way
+    // to preserve Undo/Redo history in contentEditable editors.
+    return document.execCommand('insertText', false, text);
+  }
+
+  static insertIntoTextInput(element, text) {
+    element.focus();
+
+    const start = Number.isInteger(element.selectionStart)
+      ? element.selectionStart
+      : element.value.length;
+    const end = Number.isInteger(element.selectionEnd)
+      ? element.selectionEnd
+      : element.value.length;
+
+    const currentValue = element.value;
+    const nextValue = currentValue.slice(0, start) + text + currentValue.slice(end);
+
+    element.value = nextValue;
+    const nextCursorPosition = start + text.length;
+    element.selectionStart = nextCursorPosition;
+    element.selectionEnd = nextCursorPosition;
+
+    // Trigger controlled-input updates in frameworks (React, Vue, etc.).
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    element.dispatchEvent(new Event('change', { bubbles: true }));
+
+    return true;
+  }
+}
+
 /**
  * Listen for messages from the background script
  * to insert generated text.
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'INSERT_GENERATED_TEXT') {
-    const activeEl = document.activeElement;
-    
-    if (!activeEl) {
-      console.log('DevToolkit: No active element found');
-      return;
-    }
-
-    try {
-      // 1. Handle ContentEditable (Rich Text, Divs, Spans)
-      // This covers Gmail, Notion, and most modern web editors
-      if (activeEl.isContentEditable) {
-        // execCommand is deprecated but is still the only reliable way 
-        // to preserve Undo/Redo history in contentEditable
-        document.execCommand('insertText', false, message.text);
-        sendResponse({ success: true });
-        return true;
-      }
-
-      // 2. Handle Standard Inputs & Textareas
-      if (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') {
-        const start = activeEl.selectionStart;
-        const end = activeEl.selectionEnd;
-        const currentValue = activeEl.value;
-
-        // Insert text at cursor position
-        activeEl.value = currentValue.substring(0, start) + 
-                         message.text + 
-                         currentValue.substring(end);
-
-        // Move cursor to end of inserted text
-        activeEl.selectionStart = activeEl.selectionEnd = start + message.text.length;
-
-        // Dispatch events to trigger framework updates (React, Vue, etc.)
-        activeEl.dispatchEvent(new Event('input', { bubbles: true }));
-        activeEl.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        sendResponse({ success: true });
-        return true;
-      }
-      
-    } catch (err) {
-      console.error('DevToolkit: Insertion failed', err);
-    }
+  if (message.type !== 'INSERT_GENERATED_TEXT') {
+    return true;
   }
+
+  try {
+    const success = AutofillManager.insertIntoActiveElement(message.text);
+    sendResponse({ success });
+  } catch (error) {
+    console.error('DevToolkit: Insertion failed', error);
+    sendResponse({ success: false, error: error.message });
+  }
+
   return true;
 });
