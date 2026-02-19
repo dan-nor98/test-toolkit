@@ -133,7 +133,7 @@ class PopupController {
     document.getElementById('loadAuthUri')?.addEventListener('click', () => {
       const uri = document.getElementById('authManualUri')?.value?.trim();
       if (!uri) {
-        this.showToast('Paste an otpauth URI or Base32 secret first', 'error');
+        this.showToast('Paste an otpauth URI first', 'error');
         return;
       }
       this.loadAuthenticatorFromUri(uri);
@@ -189,26 +189,11 @@ class PopupController {
   }
 
   parseOtpAuthUri(uri) {
-    const rawInput = (uri || '').trim();
-    const compactInput = rawInput.replace(/\s+/g, '').replace(/=+$/g, '').toUpperCase();
-
-    // Support plain Base32 secrets directly (e.g. GYZTSMBXGE2DMNRUGM3TKOJQGQ4DQ)
-    if (/^[A-Z2-7]+$/.test(compactInput)) {
-      return {
-        secret: compactInput,
-        issuer: 'Imported Secret',
-        account: 'Manual Entry',
-        digits: 6,
-        period: 30,
-        algorithm: 'SHA1'
-      };
-    }
-
     let parsed;
     try {
-      parsed = new URL(rawInput);
+      parsed = new URL(uri);
     } catch {
-      throw new Error('Invalid input. Use an otpauth URI or Base32 secret');
+      throw new Error('Invalid URI format');
     }
 
     if (parsed.protocol !== 'otpauth:' || parsed.hostname !== 'totp') {
