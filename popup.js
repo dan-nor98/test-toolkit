@@ -33,6 +33,7 @@ class PopupController {
 
   initApiTester() {
     this.setupApiTesterEventListeners();
+    this.setupImportExportHandlers();
     this.renderApiLists(); 
   }
 
@@ -373,6 +374,165 @@ class PopupController {
     document.getElementById('saveRequestBtn')?.addEventListener('click', () => {
       this.saveToCollections();
     });
+  }
+
+  setupImportExportHandlers() {
+    document.getElementById('exportBtn')?.addEventListener('click', () => {
+      this.exportCollections();
+    });
+
+    document.getElementById('importBtn')?.addEventListener('click', () => {
+      document.getElementById('importFile').click();
+    });
+
+    document.getElementById('importFile')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        this.importCollections(file);
+      }
+      e.target.value = ''; // Reset for next time
+    });
+  }
+
+  exportCollections() {
+    const { collections } = this.getApiStorage();
+    if (collections.length === 0) {
+      this.showToast('No collections to export', 'error');
+      return;
+    }
+
+    const postmanCollection = {
+      info: {
+        name: 'DevToolkit Export',
+        schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
+      },
+      item: collections.map(item => {
+        try {
+          const { url, options } = CurlParser.parse(item.curl);
+          const urlObj = new URL(url);
+
+          return {
+            name: item.name,
+            request: {
+              method: options.method,
+              header: Object.entries(options.headers).map(([key, value]) => ({
+                key,
+                value,
+                type: 'text'
+              })),
+              url: {
+                raw: url,
+                protocol: urlObj.protocol.replace(':', ''),
+                host: urlObj.hostname.split('.'),
+                path: urlObj.pathname.split('/').filter(x => x),
+                query: Array.from(urlObj.searchParams.entries()).map(([key, value]) => ({
+                  key,
+                  value
+                }))
+              },
+              body: options.body ? {
+                mode: 'raw',
+                raw: options.body
+              } : undefined
+            }
+          };
+        } catch (e) {
+          console.error('Failed to parse curl for export', item.curl, e);
+          // Fallback if parsing fails
+          return {
+            name: item.name,
+            request: {
+              method: 'GET',
+              url: { raw: 'error-parsing-curl' },
+              description: `Original cURL: ${item.curl}`
+            }
+          };
+        }
+      })
+    };
+
+    const blob = new Blob([JSON.stringify(postmanCollection, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `devtoolkit-collections-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    this.showToast('Collections exported');
+  }
+
+  importCollections(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        const requests = [];
+
+        const extractRequests = (items) => {
+          if (!items || !Array.isArray(items)) return;
+          items.forEach(item => {
+            if (item.request) {
+              requests.push({
+                name: item.name,
+                curl: this.convertPostmanToCurl(item.request)
+              });
+            }
+            if (item.item) {
+              extractRequests(item.item);
+            }
+          });
+        };
+
+        extractRequests(data.item);
+
+        if (requests.length === 0) {
+          this.showToast('No requests found in file', 'error');
+          return;
+        }
+
+        const { collections } = this.getApiStorage();
+        const newCollections = [...collections];
+
+        requests.forEach(req => {
+          newCollections.push({
+            id: Date.now() + Math.random(),
+            name: req.name,
+            curl: req.curl
+          });
+        });
+
+        localStorage.setItem('dt_api_collections', JSON.stringify(newCollections));
+        this.renderApiLists();
+        this.showToast(`Imported ${requests.length} requests`);
+      } catch (err) {
+        console.error('Import failed', err);
+        this.showToast('Failed to parse collection file', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  convertPostmanToCurl(request) {
+    const method = request.method || 'GET';
+    let url = typeof request.url === 'string' ? request.url : (request.url?.raw || '');
+
+    let curl = `curl -X ${method} '${url}'`;
+
+    if (request.header) {
+      request.header.forEach(h => {
+        if (!h.disabled) {
+          curl += ` -H '${h.key}: ${h.value}'`;
+        }
+      });
+    }
+
+    if (request.body && request.body.mode === 'raw' && request.body.raw) {
+      curl += ` --data-raw '${request.body.raw.replace(/'/g, "\\'")}'`;
+    }
+
+    return curl;
   }
 
   // Tab Management
