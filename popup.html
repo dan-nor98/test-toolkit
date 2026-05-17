@@ -11,30 +11,54 @@
     <header class="header">
       <div>
         <h1 class="title">DevToolkit</h1>
-        <p class="subtitle">Developer Utilities</p>
+        <p class="subtitle">Search, capture, generate, and inspect faster</p>
       </div>
-      </header>
+    </header>
 
-    <nav class="tabs">
-      <button class="tab-btn" data-tab="clipboard">
-        <span>Clipboard</span>
-      </button>
-      <button class="tab-btn active" data-tab="generator">
-        <span>Generator</span>
-      </button>
-      <button class="tab-btn" data-tab="api">
-        <span>API</span>
-      </button>
-      <button class="tab-btn" data-tab="json">
-        <span>JSON</span>
-      </button>
-      <button class="tab-btn" data-tab="auth">
-        <span>Auth</span>
-      </button>
-      <button class="tab-btn" data-tab="notes">
-        <span>Notes</span>
-      </button>
-    </nav>
+    <section class="command-panel" aria-label="Tool command center">
+      <label class="command-input-wrap" for="commandSearch">
+        <span class="command-input-icon" aria-hidden="true">⌘</span>
+        <input
+          type="search"
+          id="commandSearch"
+          class="command-input"
+          placeholder="Search tools, history, or actions…"
+          autocomplete="off"
+        >
+      </label>
+
+      <nav class="tabs" aria-label="Tool navigation">
+        <div class="tab-group">
+          <p class="tab-group-title">Capture</p>
+          <button class="tab-btn" data-tab="clipboard" data-keywords="capture clipboard history copy paste">
+            <span>Clipboard</span>
+          </button>
+          <button class="tab-btn" data-tab="notes" data-keywords="capture notes website memo">
+            <span>Notes</span>
+          </button>
+        </div>
+
+        <div class="tab-group">
+          <p class="tab-group-title">Generate</p>
+          <button class="tab-btn active" data-tab="generator" data-keywords="generate test data fake name phone email">
+            <span>Test Data</span>
+          </button>
+          <button class="tab-btn" data-tab="auth" data-keywords="generate authenticator totp otp auth">
+            <span>Authenticator</span>
+          </button>
+        </div>
+
+        <div class="tab-group">
+          <p class="tab-group-title">Inspect</p>
+          <button class="tab-btn" data-tab="json" data-keywords="inspect json format validate parse">
+            <span>JSON</span>
+          </button>
+          <button class="tab-btn" data-tab="api" data-keywords="inspect api tester request curl http">
+            <span>API Tester</span>
+          </button>
+        </div>
+      </nav>
+    </section>
 
     <div id="tab-clipboard" class="tab-content">
       <div class="tab-header">

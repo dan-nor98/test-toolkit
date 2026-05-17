@@ -44,7 +44,7 @@ body {
 
 /* --- Header --- */
 .header {
-  padding: 16px 20px;
+  padding: 12px 18px 10px;
   background: var(--bg-app);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
@@ -53,7 +53,7 @@ body {
 }
 
 .title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.02em;
   background: linear-gradient(to right, #fff, #94a3b8);
@@ -66,47 +66,117 @@ body {
 .subtitle {
   font-size: 11px;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin: 2px 0 0;
 }
 
-/* --- Tabs --- */
-.tabs {
-  display: flex;
-  background: var(--bg-app);
-  padding: 0 10px;
+/* --- Command Navigation --- */
+.command-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.14), transparent 34%),
+    var(--bg-app);
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.tab-btn {
-  background: none;
-  border: none;
-  padding: 12px 10px;
+.command-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.command-input-wrap:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--primary-glow), 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.command-input-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.command-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-main);
+  font: 500 13px/1.4 var(--font-sans);
+}
+
+.command-input::placeholder { color: var(--text-muted); }
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tab-group-title {
+  margin: 0;
   color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tab-btn {
+  width: 100%;
+  min-height: 34px;
+  background: rgba(30, 41, 59, 0.72);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 9px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   position: relative;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   gap: 8px;
+  text-align: left;
 }
 
-.tab-btn:hover { color: var(--text-main); }
-
-.tab-btn.active { color: var(--primary); }
-
-/* The underline indicator for active tab */
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: var(--primary);
-  box-shadow: 0 -2px 6px var(--primary-glow);
+.tab-btn:hover {
+  border-color: rgba(59, 130, 246, 0.65);
+  color: var(--text-main);
+  background: var(--bg-hover);
 }
+
+.tab-btn.active {
+  border-color: var(--primary);
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--text-main);
+  box-shadow: inset 3px 0 0 var(--primary), 0 0 0 1px var(--primary-glow);
+}
+
+.tab-btn.is-hidden { display: none; }
+
+.tab-group.is-empty { display: none; }
 
 .tab-icon { width: 16px; height: 16px; opacity: 0.8; }
 
