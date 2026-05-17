@@ -124,6 +124,8 @@ class PopupController {
       this.updateClipboardSettings({ blockedDomains: e.target.value });
     });
 
+    this.setupClipboardSettingsDisclosure();
+
     document.querySelectorAll('.gen-item').forEach(btn => {
       btn.addEventListener('click', (e) => this.generateData(e));
     });
@@ -570,6 +572,20 @@ class PopupController {
     this.queueClipboardSettingsSave();
   }
 
+  setupClipboardSettingsDisclosure() {
+    const settingsDisclosure = document.querySelector('.clipboard-settings');
+    const settingsSummary = settingsDisclosure?.querySelector('.clipboard-settings-summary');
+
+    if (!settingsDisclosure || !settingsSummary) return;
+
+    const syncExpandedState = () => {
+      settingsSummary.setAttribute('aria-expanded', String(settingsDisclosure.open));
+    };
+
+    syncExpandedState();
+    settingsDisclosure.addEventListener('toggle', syncExpandedState);
+  }
+
   queueClipboardSettingsSave() {
     clearTimeout(this.settingsSaveTimer);
     this.settingsSaveTimer = setTimeout(async () => {
@@ -645,6 +661,8 @@ class PopupController {
     const store = tx.objectStore('logs');
     store.clear().onsuccess = () => {
       this.loadClipboardHistory();
+      const status = document.getElementById('clipboardSettingsStatus');
+      if (status) status.textContent = 'Clipboard history cleared.';
       this.showToast('Clipboard history cleared');
     };
   }
