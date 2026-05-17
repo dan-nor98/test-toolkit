@@ -545,9 +545,32 @@ class PopupController {
   // --- API History & Collections Logic ---
 
   getApiStorage() {
+    const canShowApiTesterToast = () => (
+      document.body?.id === 'api-tester-body'
+      && document.getElementById('toast')
+      && document.getElementById('toastMessage')
+    );
+
+    const safeParseArrayStorage = (key) => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch (error) {
+        console.log(`Failed to parse ${key} from localStorage`, error);
+      }
+
+      localStorage.removeItem(key);
+      if (canShowApiTesterToast()) {
+        this.showToast('Saved API tester data was reset', 'error');
+      }
+      return [];
+    };
+
     return {
-      history: JSON.parse(localStorage.getItem('dt_api_history') || '[]'),
-      collections: JSON.parse(localStorage.getItem('dt_api_collections') || '[]')
+      history: safeParseArrayStorage('dt_api_history'),
+      collections: safeParseArrayStorage('dt_api_collections')
     };
   }
 
