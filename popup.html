@@ -86,89 +86,122 @@
 
       <main class="workspace" aria-label="Tool workspace">
         <div id="tab-clipboard" class="tab-content">
-          <div class="tab-header">
+          <div class="tab-header clipboard-toolbar">
             <input
               type="search"
               id="clipboardSearch"
-              placeholder="Search history..."
+              placeholder="Search clipboard history..."
               class="clipboard-search-input"
+              aria-label="Search clipboard history"
             />
-            <button id="clearClipboard" class="btn btn-danger btn-sm">
-              Clear
-            </button>
           </div>
 
-          <section
+          <div id="clipboardList" class="clipboard-list"></div>
+
+          <details
             class="output-container clipboard-settings"
             aria-labelledby="clipboardSettingsTitle"
           >
-            <div class="output-header">
-              <h2
-                id="clipboardSettingsTitle"
-                class="tab-title tab-title--compact"
-              >
-                Clipboard Settings
-              </h2>
-              <label
-                class="toggle"
-                title="Pause or resume automatic clipboard capture"
-              >
-                <input
-                  type="checkbox"
-                  id="captureEnabledToggle"
-                  class="toggle-input"
-                />
-                <div class="toggle-track">
-                  <div class="toggle-thumb"></div>
-                </div>
-                <span id="captureEnabledLabel" class="toggle-text"
-                  >Capture On</span
+            <summary class="clipboard-settings-summary" aria-expanded="false">
+              <span class="clipboard-settings-summary__content">
+                <span
+                  id="clipboardSettingsTitle"
+                  class="tab-title tab-title--compact"
                 >
-              </label>
+                  Settings
+                </span>
+                <span class="settings-help">
+                  Capture, retention, domain blocking, and history actions
+                </span>
+              </span>
+            </summary>
+
+            <div class="settings-panel">
+              <div class="settings-grid">
+                <div class="settings-row settings-row--inline">
+                  <div>
+                    <span class="output-label output-label--inline">
+                      Capture enabled
+                    </span>
+                    <p class="settings-help">
+                      Pause or resume automatic clipboard capture.
+                    </p>
+                  </div>
+                  <label
+                    class="toggle"
+                    title="Pause or resume automatic clipboard capture"
+                  >
+                    <input
+                      type="checkbox"
+                      id="captureEnabledToggle"
+                      class="toggle-input"
+                    />
+                    <div class="toggle-track">
+                      <div class="toggle-thumb"></div>
+                    </div>
+                    <span id="captureEnabledLabel" class="toggle-text"
+                      >Capture On</span
+                    >
+                  </label>
+                </div>
+
+                <label class="output-label" for="maxHistorySize">
+                  Maximum history size
+                  <input
+                    type="number"
+                    id="maxHistorySize"
+                    min="1"
+                    max="1000"
+                    step="1"
+                    class="field-control"
+                  />
+                </label>
+
+                <label class="output-label" for="retentionDays">
+                  Retention period in days (optional)
+                  <input
+                    type="number"
+                    id="retentionDays"
+                    min="0"
+                    max="3650"
+                    step="1"
+                    placeholder="0 = keep until max size"
+                    class="field-control"
+                  />
+                </label>
+
+                <label class="output-label" for="blockedDomains">
+                  Blocked domains (optional, one per line)
+                  <textarea
+                    id="blockedDomains"
+                    class="curl-input field-control textarea-sm"
+                    placeholder="example.com&#10;internal.example.org"
+                  ></textarea>
+                </label>
+
+                <p id="clipboardSettingsStatus" class="settings-help">
+                  Settings are stored locally in Chrome storage.
+                </p>
+              </div>
+
+              <div class="settings-danger-zone">
+                <div>
+                  <span class="output-label output-label--inline">
+                    Clipboard history
+                  </span>
+                  <p class="settings-help">
+                    Clearing history permanently removes all saved clipboard entries.
+                  </p>
+                </div>
+                <button
+                  id="clearClipboard"
+                  class="btn btn-secondary-danger secondary-danger btn-sm"
+                >
+                  Clear history
+                </button>
+              </div>
             </div>
-
-            <div class="settings-grid">
-              <label class="output-label" for="maxHistorySize">
-                Maximum history size
-                <input
-                  type="number"
-                  id="maxHistorySize"
-                  min="1"
-                  max="1000"
-                  step="1"
-                  class="field-control"
-                />
-              </label>
-
-              <label class="output-label" for="retentionDays">
-                Retention period in days (optional)
-                <input
-                  type="number"
-                  id="retentionDays"
-                  min="0"
-                  max="3650"
-                  step="1"
-                  placeholder="0 = keep until max size"
-                  class="field-control"
-                />
-              </label>
-
-              <label class="output-label" for="blockedDomains">
-                Blocked domains (optional, one per line)
-                <textarea
-                  id="blockedDomains"
-                  class="curl-input field-control textarea-sm"
-                  placeholder="example.com&#10;internal.example.org"
-                ></textarea>
-              </label>
-
-              <p id="clipboardSettingsStatus" class="settings-help">
-                Settings are stored locally in Chrome storage.
-              </p>
-            </div>
-          </section>
-
-          <div id="clipboardList" class="clipboard-list"></div>
+          </details>
         </div>
 
         <div id="tab-generator" class="tab-content active">
