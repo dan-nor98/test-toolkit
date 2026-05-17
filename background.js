@@ -240,9 +240,22 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+function sendGeneratedTextToContextFrame(tabId, info, text) {
+  const message = {
+    type: 'INSERT_GENERATED_TEXT',
+    text
+  };
+
+  if (Number.isInteger(info.frameId)) {
+    return chrome.tabs.sendMessage(tabId, message, { frameId: info.frameId });
+  }
+
+  return chrome.tabs.sendMessage(tabId, message);
+}
+
 // Listen for a click on one of our context menu items
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (!tab || !tab.id) return;
+  if (!tab || !Number.isInteger(tab.id)) return;
 
   let generatedText = '';
   
@@ -273,12 +286,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         return; 
     }
 
-    // FIXED: Added frameId to target specific frames (iframes)
+    // Send to the content script in the frame that opened the editable context menu.
     if (generatedText) {
-      chrome.tabs.sendMessage(tab.id, {
-        type: 'INSERT_GENERATED_TEXT',
-        text: generatedText
-      }, { frameId: info.frameId }).catch(err => {
+      sendGeneratedTextToContextFrame(tab.id, info, generatedText).catch(err => {
         // This usually happens if the page needs a refresh
         console.log('DevToolkit: Could not insert text. Page might need refresh.', err);
       });
