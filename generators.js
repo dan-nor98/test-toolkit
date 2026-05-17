@@ -58,28 +58,6 @@ class DataGenerators {
   }
 
   /**
-   * Calculate Luhn check digit for card numbers
-   */
-  static calculateLuhnCheckDigit(numberString) {
-    const digits = numberString.split('').map(Number);
-    let sum = 0;
-    let isSecond = false;
-    
-    for (let i = digits.length - 1; i >= 0; i--) {
-      let digit = digits[i];
-      if (isSecond) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
-      }
-      sum += digit;
-      isSecond = !isSecond;
-    }
-    
-    const remainder = sum % 10;
-    return remainder === 0 ? 0 : 10 - remainder;
-  }
-
-  /**
    * Generate valid Iranian bank card number
    * Format: 16 digits with valid Luhn check digit
    */
@@ -102,49 +80,46 @@ class DataGenerators {
     
     const iin = iranianBankIINs[Math.floor(Math.random() * iranianBankIINs.length)];
     
-    // This correctly generates 9 digits (from 100,000,000 to 999,999,999)
     const accountPart = (Math.floor(Math.random() * 900000000) + 100000000).toString();
-    
-    // This creates the 15-digit prefix (6 + 9)
     const partial = `${iin}${accountPart}`;
-    
-    // Calculate the 16th digit based on the 15-digit prefix
-    const checkDigit = this.calculateLuhnCheckDigit(partial);
+    const checkDigit = this.calculateCardCheckDigitFrom15DigitPrefix(partial);
     
     return `${partial}${checkDigit}`;
   }
 
   /**
-   * Calculates the Luhn check digit (the 16th digit) for a 15-digit partial card number.
-   * @param {string} partial - The 15-digit string.
-   * @returns {string} The 1-digit check digit.
+   * Calculates the Luhn check digit that completes a 16-digit card number.
+   *
+   * Contract: accepts only a 15-digit numeric card prefix and returns the
+   * single digit string that makes the resulting 16-digit number Luhn-valid.
+   *
+   * @param {string} partial - The 15-digit card prefix.
+   * @returns {string} The 1-digit Luhn check digit.
    */
-  static calculateLuhnCheckDigit(partial) {
-    if (partial.length !== 15) {
-      throw new Error("Partial number must be 15 digits long to calculate a 16th check digit.");
+  static calculateCardCheckDigitFrom15DigitPrefix(partial) {
+    if (!/^\d{15}$/.test(partial)) {
+      throw new Error('Partial card number must be a 15-digit numeric string.');
     }
 
     let sum = 0;
-    // For a 16-digit number, the Luhn algorithm doubles the 1st, 3rd, 5th... 15th digits.
-    let double = true; 
+    let shouldDouble = true;
 
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < partial.length; i++) {
       let digit = parseInt(partial[i], 10);
 
-      if (double) {
+      if (shouldDouble) {
         digit *= 2;
         if (digit > 9) {
-          digit -= 9; // This is equivalent to summing the digits (e.g., 14 -> 1+4=5, 14-9=5)
+          digit -= 9;
         }
       }
 
       sum += digit;
-      double = !double; // Flip for the next digit
+      shouldDouble = !shouldDouble;
     }
 
-    // The check digit is the number needed to make the total sum a multiple of 10.
     const checkDigit = (10 - (sum % 10)) % 10;
-    
+
     return checkDigit.toString();
   }
 
