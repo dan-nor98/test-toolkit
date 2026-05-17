@@ -18,13 +18,28 @@
 </head>
 <body id="api-tester-body">
   <main class="api-wrapper" aria-label="API Tester">
-    <section class="api-panel api-request-panel" aria-labelledby="apiRequestTitle">
-      <div class="api-panel__header">
-        <div>
-          <h1 id="apiRequestTitle" class="title api-title">API Tester</h1>
-          <p class="api-panel__subtitle">Paste a cURL command, review the parsed target, then run or save it.</p>
-        </div>
+    <header class="api-topbar">
+      <div>
+        <h1 id="apiRequestTitle" class="title api-title">API Tester</h1>
+        <p class="api-panel__subtitle">Paste a cURL command, review the parsed target, then run or save it.</p>
       </div>
+      <div class="api-actions" aria-label="Request actions">
+        <span id="apiRequestStatus" class="inline-status" aria-live="polite"></span>
+        <button id="saveRequestBtn" class="btn api-secondary-btn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          Save
+        </button>
+        <button id="cancelCurl" class="btn btn-danger is-initially-hidden" disabled>
+          Stop
+        </button>
+        <button id="executeCurl" class="btn btn-primary">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Run
+        </button>
+      </div>
+    </header>
+
+    <section class="api-panel api-request-panel" aria-labelledby="apiRequestTitle">
 
       <div class="api-card api-card--grow">
         <label for="curlInput" class="output-label">cURL Command</label>
@@ -41,21 +56,6 @@
           <span class="api-preview__label">URL</span>
           <strong id="requestUrlPreview" class="api-preview__value">Paste a valid cURL command to preview the request.</strong>
         </div>
-      </div>
-
-      <div class="api-actions" aria-label="Request actions">
-        <span id="apiRequestStatus" class="inline-status" aria-live="polite"></span>
-        <button id="saveRequestBtn" class="btn api-secondary-btn">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-          Save
-        </button>
-        <button id="cancelCurl" class="btn btn-danger" style="display: none;" disabled>
-          Cancel
-        </button>
-        <button id="executeCurl" class="btn btn-primary">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          Run
-        </button>
       </div>
 
       <div class="api-lists-grid">

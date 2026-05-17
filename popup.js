@@ -852,6 +852,7 @@ class PopupController {
     const context = await this.getCurrentWebsiteContext();
     this.currentWebsiteContext = context;
     this.currentWebsiteKey = context?.key || '';
+    this.updateAppContextLabel(context);
 
     const stored = await this.getStorageLocal(['websiteNotes']);
     this.websiteNotes = this.normalizeWebsiteNotes(stored.websiteNotes);
@@ -893,6 +894,14 @@ class PopupController {
         }
       });
     });
+  }
+
+  updateAppContextLabel(context) {
+    const label = document.getElementById('appContextLabel');
+    if (!label) return;
+
+    label.textContent = context?.hostname || 'Current site';
+    label.title = context?.url || 'Current website context';
   }
 
   normalizeWebsiteNotes(notes = {}) {
