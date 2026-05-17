@@ -296,6 +296,8 @@ class PopupController {
       document.getElementById('authIssuer').textContent = config.issuer || '-';
       document.getElementById('authAccount').textContent = config.account || '-';
       document.getElementById('authDetails').style.display = 'block';
+      const authEmptyState = document.getElementById('authEmptyState');
+      if (authEmptyState) authEmptyState.style.display = 'none';
 
       this.startAuthTicker();
       this.showToast('Authenticator loaded');
@@ -690,7 +692,7 @@ class PopupController {
     if (!entries || entries.length === 0) {
       const emptyState = filterText ? `<div class="empty-state"><p>No matches found</p></div>` : `
         <div class="empty-state">
-          <p style="opacity:0.5;">No clipboard entries yet</p>
+          <p>No clipboard entries yet</p>
         </div>
       `;
       container.innerHTML = emptyState;
@@ -828,6 +830,8 @@ class PopupController {
     valueElement.textContent = displayValue;
     valueElement.dataset.raw = rawValue;
     container.style.display = 'block';
+    const emptyState = document.getElementById('generatorEmptyState');
+    if (emptyState) emptyState.style.display = 'none';
   }
 
   copyOutputToClipboard(button) {
@@ -1457,10 +1461,14 @@ class PopupController {
       const highlighted = this.syntaxHighlightJSON(parsed);
       outputEl.innerHTML = highlighted;
       responseContainer.style.display = 'block';
+      const emptyState = document.getElementById('jsonEmptyState');
+      if (emptyState) emptyState.style.display = 'none';
       this.setInlineStatus('jsonStatus', 'Formatted', 'success');
     } catch (error) {
       outputEl.textContent = `Invalid JSON: ${error.message}`;
       responseContainer.style.display = 'block';
+      const emptyState = document.getElementById('jsonEmptyState');
+      if (emptyState) emptyState.style.display = 'none';
       this.setInlineStatus('jsonStatus', 'Invalid JSON', 'error');
       this.showToast('Invalid JSON', 'error');
     } finally {

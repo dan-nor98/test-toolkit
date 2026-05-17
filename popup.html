@@ -86,33 +86,44 @@
 
       <main class="workspace" aria-label="Tool workspace">
         <div id="tab-clipboard" class="tab-content">
-          <div class="tab-header clipboard-toolbar">
-            <input
-              type="search"
-              id="clipboardSearch"
-              placeholder="Search clipboard history..."
-              class="clipboard-search-input"
-              aria-label="Search clipboard history"
-            />
-          </div>
+          <section class="panel" aria-labelledby="clipboardPanelTitle">
+            <header class="panel-header">
+              <div>
+                <h2 id="clipboardPanelTitle" class="panel-title">Clipboard</h2>
+                <p class="panel-description">
+                  Search captured clipboard entries and manage local capture settings.
+                </p>
+              </div>
+            </header>
 
-          <div id="clipboardList" class="clipboard-list" aria-busy="true">
+            <div class="panel-body">
+              <input
+                type="search"
+                id="clipboardSearch"
+                placeholder="Search clipboard history..."
+                class="clipboard-search-input"
+                aria-label="Search clipboard history"
+              />
+
+              <div id="clipboardList" class="clipboard-list" aria-busy="true">
             <div class="skeleton-list" aria-label="Loading clipboard history">
               <div class="skeleton-row skeleton-row--clipboard"></div>
               <div class="skeleton-row skeleton-row--clipboard"></div>
               <div class="skeleton-row skeleton-row--clipboard"></div>
             </div>
-          </div>
+              </div>
+            </div>
 
-          <details
-            class="output-container clipboard-settings"
+            <footer class="panel-footer">
+              <details
+                class="panel-card clipboard-settings"
             aria-labelledby="clipboardSettingsTitle"
           >
             <summary class="clipboard-settings-summary" aria-expanded="false">
               <span class="clipboard-settings-summary__content">
                 <span
                   id="clipboardSettingsTitle"
-                  class="tab-title tab-title--compact"
+                  class="panel-title panel-title--compact"
                 >
                   Settings
                 </span>
@@ -180,7 +191,7 @@
                   Blocked domains (optional, one per line)
                   <textarea
                     id="blockedDomains"
-                    class="curl-input field-control textarea-sm"
+                    class="textarea-field field-control textarea-sm"
                     placeholder="example.com&#10;internal.example.org"
                   ></textarea>
                 </label>
@@ -207,25 +218,24 @@
                 </button>
               </div>
             </div>
-          </details>
+              </details>
+            </footer>
+          </section>
         </div>
 
         <div id="tab-generator" class="tab-content active">
-          <div class="tab-header">
-            <h2 class="tab-title">Data Generator</h2>
-
-            <label
-              class="toggle"
-              title="Automatically copy result to clipboard"
-            >
-              <input type="checkbox" id="autoCopyToggle" class="toggle-input" />
-              <div class="toggle-track">
-                <div class="toggle-thumb"></div>
+          <section class="panel" aria-labelledby="generatorPanelTitle">
+            <header class="panel-header">
+              <div>
+                <h2 id="generatorPanelTitle" class="panel-title">Data Generator</h2>
+                <p class="panel-description">
+                  Pick a command to generate realistic test data; results appear below.
+                </p>
               </div>
-              <span class="toggle-text">Auto Copy</span>
-            </label>
-          </div>
-          <div class="gen-container" role="list" aria-label="Generator commands">
+            </header>
+
+            <div class="panel-body">
+              <div class="gen-container" role="list" aria-label="Generator commands">
             <button
               class="gen-item"
               data-type="name"
@@ -476,11 +486,19 @@
                 /></label>
               </div>
             </div>
-          </div>
+              </div>
 
-          <div
-            id="generatorOutput"
-            class="output-container is-initially-hidden"
+              <div
+                id="generatorEmptyState"
+                class="empty-state empty-state--inline"
+                aria-label="Generator result empty state"
+              >
+                Choose a generator to create your first value.
+              </div>
+
+              <div
+                id="generatorOutput"
+            class="result-card is-initially-hidden"
           >
             <div class="output-header">
               <label class="output-label">Result</label>
@@ -491,29 +509,60 @@
                 </button>
               </div>
             </div>
-            <div id="outputValue" class="output-value"></div>
-          </div>
+                <div id="outputValue" class="output-value"></div>
+              </div>
+            </div>
+
+            <footer class="panel-footer panel-footer--split">
+              <p class="panel-description panel-description--footer">
+                Generated values stay local unless you copy them.
+              </p>
+              <label
+                class="toggle"
+                title="Automatically copy result to clipboard"
+              >
+                <input type="checkbox" id="autoCopyToggle" class="toggle-input" />
+                <div class="toggle-track">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="toggle-text">Auto Copy</span>
+              </label>
+            </footer>
+          </section>
         </div>
 
         <div id="tab-json" class="tab-content">
-          <div class="tab-header">
-            <h2 class="tab-title">JSON Formatter</h2>
-            <div class="inline-action-wrap">
-              <span id="jsonStatus" class="inline-status" aria-live="polite"></span>
-              <button id="formatJsonBtn" class="btn btn-primary btn-sm">
-                Format
-              </button>
-            </div>
-          </div>
-          <textarea
-            id="jsonInput"
-            class="curl-input textarea-lg"
-            placeholder="Paste your JSON here..."
-          ></textarea>
+          <section class="panel" aria-labelledby="jsonPanelTitle">
+            <header class="panel-header">
+              <div>
+                <h2 id="jsonPanelTitle" class="panel-title">JSON Formatter</h2>
+                <p class="panel-description">
+                  Paste raw JSON, format it, and copy validated output.
+                </p>
+              </div>
+            </header>
 
-          <div
-            id="jsonResponse"
-            class="output-container output-container--compact is-initially-hidden"
+            <div class="panel-body">
+              <textarea
+                id="jsonInput"
+                class="textarea-field textarea-lg"
+                placeholder="Paste your JSON here..."
+              ></textarea>
+
+              <div class="action-row action-row--end">
+                <span id="jsonStatus" class="inline-status" aria-live="polite"></span>
+                <button id="formatJsonBtn" class="btn btn-primary btn-sm">
+                  Format
+                </button>
+              </div>
+
+              <div id="jsonEmptyState" class="empty-state empty-state--inline">
+                Formatted JSON will appear after you run the formatter.
+              </div>
+
+              <div
+                id="jsonResponse"
+            class="result-card result-card--compact is-initially-hidden"
           >
             <div class="output-header">
               <label class="output-label">Formatted</label>
@@ -524,19 +573,28 @@
                 </button>
               </div>
             </div>
-            <pre
-              id="jsonOutput"
-              class="output-value output-value--scroll"
-            ></pre>
-          </div>
+                <pre
+                  id="jsonOutput"
+                  class="output-value output-value--scroll"
+                ></pre>
+              </div>
+            </div>
+          </section>
         </div>
 
         <div id="tab-auth" class="tab-content">
-          <div class="tab-header">
-            <h2 class="tab-title">Authenticator</h2>
-          </div>
+          <section class="panel" aria-labelledby="authPanelTitle">
+            <header class="panel-header">
+              <div>
+                <h2 id="authPanelTitle" class="panel-title">Authenticator</h2>
+                <p class="panel-description">
+                  Import a QR image or paste an otpauth URI to generate time-based codes.
+                </p>
+              </div>
+            </header>
 
-          <div class="auth-card">
+            <div class="panel-body">
+              <div class="panel-card auth-card">
             <label class="output-label" for="authQrInput"
               >Import from QR image</label
             >
@@ -547,15 +605,21 @@
             >
             <textarea
               id="authManualUri"
-              class="curl-input textarea-md"
+              class="textarea-field textarea-md"
               placeholder="Google secret key like GYZT SMBX GE2D MNRU GM3T KOJQ GQ4D Q OR otpauth://totp/..."
             ></textarea>
-            <button id="loadAuthUri" class="btn btn-primary btn-spaced">
-              Load Secret
-            </button>
-          </div>
+                <div class="action-row action-row--end">
+                  <button id="loadAuthUri" class="btn btn-primary btn-sm">
+                    Load Secret
+                  </button>
+                </div>
+              </div>
 
-          <div id="authDetails" class="output-container is-initially-hidden">
+              <div id="authEmptyState" class="empty-state empty-state--inline">
+                Loaded authenticator details and codes will appear here.
+              </div>
+
+              <div id="authDetails" class="result-card is-initially-hidden">
             <div class="auth-meta">
               <div>
                 <span class="output-label">Issuer</span>
@@ -575,24 +639,25 @@
             <div class="auth-progress-wrap">
               <div id="authProgress" class="auth-progress"></div>
             </div>
-            <p id="authTimer" class="auth-timer">Refreshing in 30s</p>
-          </div>
+                <p id="authTimer" class="auth-timer">Refreshing in 30s</p>
+              </div>
+            </div>
+          </section>
         </div>
 
         <div id="tab-notes" class="tab-content">
-          <div class="tab-header">
-            <div>
-              <h2 class="tab-title">Website Notes</h2>
-              <p id="notesSiteLabel" class="notes-site-label">
-                Loading current website...
-              </p>
-            </div>
-            <button id="clearWebsiteNotes" class="btn btn-danger btn-sm">
-              Clear
-            </button>
-          </div>
+          <section class="panel" aria-labelledby="notesPanelTitle">
+            <header class="panel-header">
+              <div>
+                <h2 id="notesPanelTitle" class="panel-title">Website Notes</h2>
+                <p id="notesSiteLabel" class="panel-description notes-site-label">
+                  Loading current website...
+                </p>
+              </div>
+            </header>
 
-          <section class="notes-card" aria-labelledby="notesTextLabel">
+            <div class="panel-body">
+              <section class="panel-card notes-card" aria-labelledby="notesTextLabel">
             <label
               id="notesTextLabel"
               class="output-label"
@@ -601,19 +666,19 @@
             >
             <textarea
               id="websiteNoteInput"
-              class="curl-input"
+              class="textarea-field"
               placeholder="Write reminders, QA findings, login hints, test data notes, or anything you want to remember for this website..."
               rows="7"
             ></textarea>
             <p id="notesSaveStatus" class="notes-status">
               Loading website notes...
             </p>
-          </section>
+              </section>
 
-          <section class="notes-card" aria-labelledby="todoTitle">
-            <div class="output-header notes-todo-header">
-              <h3 id="todoTitle" class="tab-title notes-subtitle">Todo list</h3>
-            </div>
+              <section class="panel-card notes-card" aria-labelledby="todoTitle">
+                <div class="output-header notes-todo-header">
+                  <h3 id="todoTitle" class="panel-title notes-subtitle">Todo list</h3>
+                </div>
             <div class="notes-add-row">
               <input
                 type="text"
@@ -629,12 +694,31 @@
                 <div class="skeleton-row skeleton-row--todo"></div>
                 <div class="skeleton-row skeleton-row--todo"></div>
               </div>
+                </div>
+              </section>
             </div>
+
+            <footer class="panel-footer panel-footer--end">
+              <button id="clearWebsiteNotes" class="btn btn-danger btn-sm">
+                Clear website notes
+              </button>
+            </footer>
           </section>
         </div>
 
         <div id="tab-api" class="tab-content">
-          <div class="api-empty-state">
+          <section class="panel" aria-labelledby="apiPanelTitle">
+            <header class="panel-header">
+              <div>
+                <h2 id="apiPanelTitle" class="panel-title">API Tester</h2>
+                <p class="panel-description">
+                  Launch the full API workspace when you need room for requests and responses.
+                </p>
+              </div>
+            </header>
+
+            <div class="panel-body">
+              <div class="empty-state api-empty-state">
             <svg
               class="api-empty-state__icon"
               viewBox="0 0 24 24"
@@ -648,17 +732,22 @@
               <polyline points="15 3 21 3 21 9"></polyline>
               <line x1="10" y1="14" x2="21" y2="3"></line>
             </svg>
-            <p class="api-empty-state__message">
-              API Tester requires more space.
-            </p>
-            <div class="skeleton-list skeleton-list--api" aria-label="Loading API history and collections">
-              <div class="skeleton-row skeleton-row--api"></div>
-              <div class="skeleton-row skeleton-row--api"></div>
+                <button id="openApiTab" class="btn btn-primary btn-spaced-lg">
+                  Open in New Tab
+                </button>
+                <p class="api-empty-state__message">
+                  API Tester requires more space than the popup can provide.
+                </p>
+                <div
+                  class="skeleton-list skeleton-list--api"
+                  aria-label="Loading API history and collections"
+                >
+                  <div class="skeleton-row skeleton-row--api"></div>
+                  <div class="skeleton-row skeleton-row--api"></div>
+                </div>
+              </div>
             </div>
-            <button id="openApiTab" class="btn btn-primary btn-spaced-lg">
-              Open in New Tab
-            </button>
-          </div>
+          </section>
         </div>
       </main>
 

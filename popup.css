@@ -351,15 +351,23 @@ body {
   }
 }
 
-/* --- Section Headers --- */
-.tab-header {
+/* --- Shared Panel Components --- */
+.panel {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-8);
+  min-height: 100%;
+  flex-direction: column;
+  gap: var(--space-8);
 }
 
-.tab-title {
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.panel-title {
+  margin: 0;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
@@ -367,12 +375,65 @@ body {
   letter-spacing: 0.05em;
 }
 
-.tab-title--compact {
+.panel-title--compact {
+  font-size: var(--font-size-sm);
+}
+
+.panel-description {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.panel-description--footer {
   margin: 0;
 }
 
-.clipboard-toolbar {
-  margin-bottom: var(--space-6);
+.panel-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.panel-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-top: auto;
+}
+
+.panel-footer--split,
+.panel-footer--end {
+  flex-direction: row;
+  align-items: center;
+}
+
+.panel-footer--split {
+  justify-content: space-between;
+}
+
+.panel-footer--end {
+  justify-content: flex-end;
+}
+
+.panel-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.action-row--end {
+  justify-content: flex-end;
 }
 
 .clipboard-search-input {
@@ -643,14 +704,14 @@ body {
   background: var(--color-white);
 }
 
-/* --- Output Box --- */
-.output-container {
-  margin-top: var(--space-10);
+/* --- Result Card --- */
+.result-card {
+  margin-top: var(--space-4);
   border-top: 1px solid var(--color-border);
-  padding-top: var(--space-10);
+  padding-top: var(--space-8);
 }
 
-.output-container--compact {
+.result-card--compact {
   border-top: none;
   padding-top: var(--space-5);
 }
@@ -989,8 +1050,7 @@ textarea {
 
 /* --- Popup API Placeholder --- */
 .api-empty-state {
-  padding-top: var(--space-24);
-  text-align: center;
+  padding-top: var(--space-16);
 }
 
 .api-empty-state__icon {
@@ -1116,10 +1176,7 @@ textarea {
 }
 /* --- Authenticator --- */
 .auth-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-6);
+  margin: 0;
 }
 
 .auth-meta {
@@ -1188,11 +1245,7 @@ textarea {
 }
 
 .notes-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-6);
-  margin-bottom: var(--space-7);
+  margin: 0;
 }
 
 .notes-status {
@@ -1272,8 +1325,16 @@ textarea {
 .empty-state {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
   text-align: center;
   padding: var(--space-9);
+  background: var(--color-surface-panel-muted);
+  border: 1px dashed var(--color-muted-border);
+  border-radius: var(--radius-md);
+}
+
+.empty-state--inline {
+  padding: var(--space-6);
 }
 
 /* --- API Tester Two-Column Workspace --- */
@@ -1340,7 +1401,7 @@ textarea {
   flex: 0 0 auto;
 }
 
-.curl-input {
+.textarea-field {
   min-height: 190px;
   resize: vertical;
   font-family: var(--font-mono);
