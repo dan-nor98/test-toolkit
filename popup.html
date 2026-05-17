@@ -38,6 +38,39 @@
         <input type="search" id="clipboardSearch" placeholder="Search history..." style="max-width: 200px;">
         <button id="clearClipboard" class="btn btn-danger btn-sm">Clear</button>
       </div>
+
+      <section class="output-container" aria-labelledby="clipboardSettingsTitle" style="margin-bottom: 14px; border-top: none; padding-top: 0;">
+        <div class="output-header">
+          <h2 id="clipboardSettingsTitle" class="tab-title" style="font-size: 14px; margin: 0;">Clipboard Settings</h2>
+          <label class="toggle" title="Pause or resume automatic clipboard capture">
+            <input type="checkbox" id="captureEnabledToggle" class="toggle-input">
+            <div class="toggle-track">
+              <div class="toggle-thumb"></div>
+            </div>
+            <span id="captureEnabledLabel" class="toggle-text">Capture On</span>
+          </label>
+        </div>
+
+        <div style="display: grid; gap: 10px;">
+          <label class="output-label" for="maxHistorySize">
+            Maximum history size
+            <input type="number" id="maxHistorySize" min="1" max="1000" step="1" style="width: 100%; margin-top: 4px;">
+          </label>
+
+          <label class="output-label" for="retentionDays">
+            Retention period in days (optional)
+            <input type="number" id="retentionDays" min="0" max="3650" step="1" placeholder="0 = keep until max size" style="width: 100%; margin-top: 4px;">
+          </label>
+
+          <label class="output-label" for="blockedDomains">
+            Blocked domains (optional, one per line)
+            <textarea id="blockedDomains" class="curl-input" placeholder="example.com&#10;internal.example.org" style="min-height: 70px; margin-top: 4px;"></textarea>
+          </label>
+
+          <p id="clipboardSettingsStatus" style="color: var(--text-muted); font-size: 12px; margin: 0;">Settings are stored locally in Chrome storage.</p>
+        </div>
+      </section>
+
       <div id="clipboardList" class="clipboard-list">
         </div>
     </div>

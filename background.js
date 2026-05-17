@@ -8,6 +8,12 @@ importScripts('generators.js');
 const DB_NAME = 'ClipboardDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'logs';
+const DEFAULT_CLIPBOARD_SETTINGS = {
+  captureEnabled: true,
+  maxHistorySize: 100,
+  retentionDays: 0,
+  blockedDomains: []
+};
 
 class ClipboardManager {
   constructor() {
@@ -38,15 +44,60 @@ class ClipboardManager {
     });
   }
 
-  async saveClipboard(text) {
+  getStorageLocal(keys) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(keys, resolve);
+    });
+  }
+
+  async getClipboardSettings() {
+    const stored = await this.getStorageLocal(['clipboardSettings']);
+    return this.normalizeClipboardSettings(stored.clipboardSettings);
+  }
+
+  normalizeClipboardSettings(settings = {}) {
+    const maxHistorySize = Number.parseInt(settings.maxHistorySize, 10);
+    const retentionDays = Number.parseInt(settings.retentionDays, 10);
+    const blockedDomains = Array.isArray(settings.blockedDomains) ? settings.blockedDomains : [];
+
+    return {
+      captureEnabled: settings.captureEnabled !== false,
+      maxHistorySize: Number.isFinite(maxHistorySize) ? Math.min(Math.max(maxHistorySize, 1), 1000) : DEFAULT_CLIPBOARD_SETTINGS.maxHistorySize,
+      retentionDays: Number.isFinite(retentionDays) ? Math.min(Math.max(retentionDays, 0), 3650) : DEFAULT_CLIPBOARD_SETTINGS.retentionDays,
+      blockedDomains: blockedDomains.map(domain => String(domain).trim().toLowerCase()).filter(Boolean)
+    };
+  }
+
+  isBlockedDomain(url, blockedDomains) {
+    if (!url || !blockedDomains.length) return false;
+
+    try {
+      const hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, '');
+      return blockedDomains.some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
+    } catch {
+      return false;
+    }
+  }
+
+  async saveClipboard(text, sourceUrl = '') {
     if (!this.db) await this.initDB();
-    
-    return new Promise((resolve, reject) => {
+
+    const settings = await this.getClipboardSettings();
+    if (!settings.captureEnabled || this.isBlockedDomain(sourceUrl, settings.blockedDomains)) {
+      return null;
+    }
+
+    const trimmedText = text.trim();
+    if (!trimmedText) {
+      return null;
+    }
+
+    const entryId = await new Promise((resolve, reject) => {
       const tx = this.db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
       
       const entry = {
-        text: text.trim(),
+        text: trimmedText,
         timestamp: Date.now(),
         time: new Date().toLocaleString()
       };
@@ -54,6 +105,40 @@ class ClipboardManager {
       const request = store.add(entry);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
+    });
+
+    await this.cleanupClipboardHistory(settings);
+    return entryId;
+  }
+
+  async cleanupClipboardHistory(settings) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const now = Date.now();
+        const retentionCutoff = settings.retentionDays > 0
+          ? now - (settings.retentionDays * 24 * 60 * 60 * 1000)
+          : 0;
+        const entries = request.result.sort((a, b) => b.timestamp - a.timestamp);
+        const idsToDelete = new Set();
+
+        entries.forEach((entry, index) => {
+          if (retentionCutoff && entry.timestamp < retentionCutoff) {
+            idsToDelete.add(entry.id);
+          }
+          if (index >= settings.maxHistorySize) {
+            idsToDelete.add(entry.id);
+          }
+        });
+
+        idsToDelete.forEach((id) => store.delete(id));
+      };
+      request.onerror = () => reject(request.error);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
     });
   }
 
@@ -72,10 +157,12 @@ const clipboardManager = new ClipboardManager();
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'SAVE_CLIPBOARD') {
     clipboardManager
-      .saveClipboard(message.text)
-      .then(() => {
-        clipboardManager.notifyPopup();
-        sendResponse({ success: true });
+      .saveClipboard(message.text, message.sourceUrl)
+      .then((entryId) => {
+        if (entryId !== null) {
+          clipboardManager.notifyPopup();
+        }
+        sendResponse({ success: true, saved: entryId !== null });
       })
       .catch(error => {
         console.log('Failed to save clipboard:', error); // Changed to console.log for dev

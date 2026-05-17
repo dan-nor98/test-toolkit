@@ -2,11 +2,20 @@
  * DevToolkit Pro - Popup Controller
  */
 
+const DEFAULT_CLIPBOARD_SETTINGS = {
+  captureEnabled: true,
+  maxHistorySize: 100,
+  retentionDays: 0,
+  blockedDomains: []
+};
+
 class PopupController {
   constructor(pageId) {
     this.db = null;
     this.currentTab = 'generator';
     this.clipboardEntries = [];
+    this.clipboardSettings = { ...DEFAULT_CLIPBOARD_SETTINGS };
+    this.settingsSaveTimer = null;
     this.isAutoCopy = localStorage.getItem('dt_auto_copy') === 'true';
     this.authConfig = null;
     this.authTimerInterval = null;
@@ -23,6 +32,7 @@ class PopupController {
 
   async initPopup() {
     await this.initDatabase();
+    await this.loadClipboardSettings();
     this.setupPopupEventListeners();
     this.loadClipboardHistory();
     this.listenForUpdates();
@@ -75,6 +85,22 @@ class PopupController {
 
     document.getElementById('clipboardSearch')?.addEventListener('input', (e) => {
       this.renderClipboardList(this.clipboardEntries, e.target.value);
+    });
+
+    document.getElementById('captureEnabledToggle')?.addEventListener('change', (e) => {
+      this.updateClipboardSettings({ captureEnabled: e.target.checked });
+    });
+
+    document.getElementById('maxHistorySize')?.addEventListener('input', (e) => {
+      this.updateClipboardSettings({ maxHistorySize: e.target.value });
+    });
+
+    document.getElementById('retentionDays')?.addEventListener('input', (e) => {
+      this.updateClipboardSettings({ retentionDays: e.target.value });
+    });
+
+    document.getElementById('blockedDomains')?.addEventListener('input', (e) => {
+      this.updateClipboardSettings({ blockedDomains: e.target.value });
     });
 
     document.querySelectorAll('.gen-item').forEach(btn => {
@@ -396,6 +422,94 @@ class PopupController {
   }
 
   // Clipboard Management
+  getStorageLocal(keys) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(keys, resolve);
+    });
+  }
+
+  setStorageLocal(values) {
+    return new Promise((resolve) => {
+      chrome.storage.local.set(values, resolve);
+    });
+  }
+
+  async loadClipboardSettings() {
+    const stored = await this.getStorageLocal(['clipboardSettings']);
+    this.clipboardSettings = this.normalizeClipboardSettings(stored.clipboardSettings);
+    await this.setStorageLocal({ clipboardSettings: this.clipboardSettings });
+    this.renderClipboardSettings();
+  }
+
+  normalizeClipboardSettings(settings = {}) {
+    const maxHistorySize = Number.parseInt(settings.maxHistorySize, 10);
+    const retentionDays = Number.parseInt(settings.retentionDays, 10);
+    const blockedDomains = Array.isArray(settings.blockedDomains)
+      ? settings.blockedDomains
+      : this.parseBlockedDomains(settings.blockedDomains || '');
+
+    return {
+      captureEnabled: settings.captureEnabled !== false,
+      maxHistorySize: Number.isFinite(maxHistorySize) ? Math.min(Math.max(maxHistorySize, 1), 1000) : DEFAULT_CLIPBOARD_SETTINGS.maxHistorySize,
+      retentionDays: Number.isFinite(retentionDays) ? Math.min(Math.max(retentionDays, 0), 3650) : DEFAULT_CLIPBOARD_SETTINGS.retentionDays,
+      blockedDomains: this.parseBlockedDomains(blockedDomains.join('\n'))
+    };
+  }
+
+  parseBlockedDomains(value) {
+    return (value || '')
+      .split(/[\n,]+/)
+      .map(domain => domain.trim().toLowerCase())
+      .map(domain => domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0])
+      .filter(Boolean)
+      .filter((domain, index, domains) => domains.indexOf(domain) === index);
+  }
+
+  renderClipboardSettings() {
+    const toggle = document.getElementById('captureEnabledToggle');
+    const label = document.getElementById('captureEnabledLabel');
+    const maxHistorySize = document.getElementById('maxHistorySize');
+    const retentionDays = document.getElementById('retentionDays');
+    const blockedDomains = document.getElementById('blockedDomains');
+
+    if (toggle) toggle.checked = this.clipboardSettings.captureEnabled;
+    if (label) label.textContent = this.clipboardSettings.captureEnabled ? 'Capture On' : 'Capture Paused';
+    if (maxHistorySize) maxHistorySize.value = this.clipboardSettings.maxHistorySize;
+    if (retentionDays) retentionDays.value = this.clipboardSettings.retentionDays || '';
+    if (blockedDomains) blockedDomains.value = this.clipboardSettings.blockedDomains.join('\n');
+  }
+
+  updateClipboardSettings(changes) {
+    const nextSettings = { ...this.clipboardSettings };
+
+    if (Object.prototype.hasOwnProperty.call(changes, 'captureEnabled')) {
+      nextSettings.captureEnabled = Boolean(changes.captureEnabled);
+    }
+    if (Object.prototype.hasOwnProperty.call(changes, 'maxHistorySize')) {
+      nextSettings.maxHistorySize = changes.maxHistorySize;
+    }
+    if (Object.prototype.hasOwnProperty.call(changes, 'retentionDays')) {
+      nextSettings.retentionDays = changes.retentionDays === '' ? 0 : changes.retentionDays;
+    }
+    if (Object.prototype.hasOwnProperty.call(changes, 'blockedDomains')) {
+      nextSettings.blockedDomains = this.parseBlockedDomains(changes.blockedDomains);
+    }
+
+    this.clipboardSettings = this.normalizeClipboardSettings(nextSettings);
+    this.renderClipboardSettings();
+    this.queueClipboardSettingsSave();
+  }
+
+  queueClipboardSettingsSave() {
+    clearTimeout(this.settingsSaveTimer);
+    this.settingsSaveTimer = setTimeout(async () => {
+      await this.setStorageLocal({ clipboardSettings: this.clipboardSettings });
+      const status = document.getElementById('clipboardSettingsStatus');
+      if (status) status.textContent = 'Settings saved locally.';
+      this.showToast('Clipboard settings saved');
+    }, 300);
+  }
+
   listenForUpdates() {
     chrome.runtime.onMessage.addListener((message) => {
       if (message.type === 'NEW_COPY_SAVED') {

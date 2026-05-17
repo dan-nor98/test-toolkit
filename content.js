@@ -6,8 +6,38 @@
 let lastCopiedText = '';
 const MIN_TEXT_LENGTH = 1;
 const MAX_TEXT_LENGTH = 10000;
+const DEFAULT_CLIPBOARD_SETTINGS = {
+  captureEnabled: true,
+  blockedDomains: []
+};
 
-function handleCopy(e) {
+function getStorageLocal(keys) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(keys, resolve);
+  });
+}
+
+function normalizeClipboardSettings(settings = {}) {
+  const blockedDomains = Array.isArray(settings.blockedDomains) ? settings.blockedDomains : [];
+
+  return {
+    captureEnabled: settings.captureEnabled !== false,
+    blockedDomains: blockedDomains.map(domain => String(domain).trim().toLowerCase()).filter(Boolean)
+  };
+}
+
+function isCurrentDomainBlocked(blockedDomains) {
+  const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '');
+  return blockedDomains.some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
+}
+
+async function shouldCaptureClipboard() {
+  const stored = await getStorageLocal(['clipboardSettings']);
+  const settings = normalizeClipboardSettings(stored.clipboardSettings || DEFAULT_CLIPBOARD_SETTINGS);
+  return settings.captureEnabled && !isCurrentDomainBlocked(settings.blockedDomains);
+}
+
+async function handleCopy(e) {
   try {
     let text = '';
     
@@ -25,12 +55,17 @@ function handleCopy(e) {
       return;
     }
     
+    if (!(await shouldCaptureClipboard())) {
+      return;
+    }
+
     lastCopiedText = text;
     
     // Send to background
     chrome.runtime.sendMessage({
       type: 'SAVE_CLIPBOARD',
-      text: text
+      text: text,
+      sourceUrl: window.location.href
     }).catch((error) => {
       // Log errors for development
       console.log('DevToolkit: Message send failed', error);
