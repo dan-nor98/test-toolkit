@@ -84,6 +84,14 @@ This extension is built with **Manifest V3** and pure, "vanilla" JavaScript (ES6
 * **`curlParser.js`**: A utility class (`CurlParser`) with static methods to parse raw `curl` command strings into `fetch()` compatible URL and options objects.
 * **`generators.js`**: A utility class (`DataGenerators`) with static methods for generating all the required test data, including logic for Luhn checks (bank cards) and IBAN validation.
 
+## Privacy & Offline Behavior
+
+DevToolkit Pro is designed to run without third-party UI assets. The popup and API tester use extension-local CSS and a system font stack instead of loading Google Fonts or other remote font resources, so opening the extension does not make font requests to external services.
+
+If exact font rendering is required in the future, add the font files to a dedicated extension-local assets directory such as `fonts/` and load them from `popup.css` with `@font-face` rules that reference those local files.
+
+---
+
 ## Author
 
 Danial Noroozian
