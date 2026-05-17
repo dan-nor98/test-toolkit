@@ -11,7 +11,8 @@ This project was built to replace the need for multiple, separate utilities and 
 ## Features
 
 * **Clipboard Manager**
-    * **Persistent History:** Automatically captures and logs text you copy from any website.
+    * **Persistent History:** Automatically captures and logs text you copy from websites when capture is enabled.
+    * **Local Settings:** Pause/resume capture, set the maximum history size, choose an optional retention period, and block capture on specific domains.
     * **IndexedDB Storage:** History is saved locally and persistently using IndexedDB, managed by the service worker.
     * **One-Click Copy:** Click any entry in the history list to instantly copy it back to your clipboard.
     * **Clear History:** A simple button to clear all saved clipboard entries.
@@ -54,8 +55,9 @@ Since this extension is not yet on the Chrome Web Store, you can load it locally
 ## How to Use
 
 * **Clipboard History:**
-    1.  Simply copy text from any webpage. The extension's content script will automatically log it.
+    1.  Copy text from a webpage. When capture is enabled and the current domain is not blocked, the extension's content script logs the selected text.
     2.  Click the extension icon and go to the **Clipboard** tab to see your history. Click any entry to re-copy it.
+    3.  Use **Clipboard Settings** to pause/resume capture, limit saved entries, set an optional retention period, or enter blocked domains (one per line).
 
 * **Data Generator:**
     1.  Open the extension and click the **Generator** tab.
@@ -85,6 +87,8 @@ This extension is built with **Manifest V3** and pure, "vanilla" JavaScript (ES6
 * **`generators.js`**: A utility class (`DataGenerators`) with static methods for generating all the required test data, including logic for Luhn checks (bank cards) and IBAN validation.
 
 ## Privacy & Offline Behavior
+
+**Clipboard privacy note:** DevToolkit Pro listens for browser `copy` events on webpages where the content script is allowed to run. When clipboard capture is enabled, the selected copied text is sent to the extension's background service worker and stored locally in the extension's IndexedDB clipboard history. Clipboard settings are stored locally with `chrome.storage.local`; these settings let you pause capture, cap the maximum number of saved entries, remove entries after an optional retention period, and skip capture on blocked domains. Clipboard history and settings stay on your device unless you manually export, copy, sync, or otherwise share them outside the extension.
 
 DevToolkit Pro is designed to run without third-party UI assets. The popup and API tester use extension-local CSS and a system font stack instead of loading Google Fonts or other remote font resources, so opening the extension does not make font requests to external services.
 
