@@ -31,6 +31,9 @@
       <button class="tab-btn" data-tab="auth">
         <span>Auth</span>
       </button>
+      <button class="tab-btn" data-tab="notes">
+        <span>Notes</span>
+      </button>
     </nav>
 
     <div id="tab-clipboard" class="tab-content">
@@ -204,6 +207,35 @@
         </div>
         <p id="authTimer" class="auth-timer">Refreshing in 30s</p>
       </div>
+    </div>
+
+
+
+    <div id="tab-notes" class="tab-content">
+      <div class="tab-header">
+        <div>
+          <h2 class="tab-title">Website Notes</h2>
+          <p id="notesSiteLabel" class="notes-site-label">Loading current website...</p>
+        </div>
+        <button id="clearWebsiteNotes" class="btn btn-danger btn-sm">Clear</button>
+      </div>
+
+      <section class="notes-card" aria-labelledby="notesTextLabel">
+        <label id="notesTextLabel" class="output-label" for="websiteNoteInput">Notes for this website</label>
+        <textarea id="websiteNoteInput" class="curl-input" placeholder="Write reminders, QA findings, login hints, test data notes, or anything you want to remember for this website..." rows="7"></textarea>
+        <p id="notesSaveStatus" class="notes-status">Notes are saved locally per website.</p>
+      </section>
+
+      <section class="notes-card" aria-labelledby="todoTitle">
+        <div class="output-header notes-todo-header">
+          <h3 id="todoTitle" class="tab-title notes-subtitle">Todo list</h3>
+        </div>
+        <div class="notes-add-row">
+          <input type="text" id="todoInput" placeholder="Add a task for this website...">
+          <button id="addTodoBtn" class="btn btn-primary btn-sm">Add</button>
+        </div>
+        <div id="todoList" class="todo-list"></div>
+      </section>
     </div>
 
     <div id="tab-api" class="tab-content">
