@@ -217,12 +217,70 @@ class DataGenerators {
   }
 
   /**
-   * Generate secure random password
-   * Default: 16 chars, upper, lower, numbers, symbols
+   * Return a Web Crypto compatible object.
+   * Passwords and UUID fallback generation require crypto.getRandomValues();
+   * callers in unsupported runtimes receive a clear error instead of weak output.
    */
+  static getCrypto() {
+    const cryptoObject = globalThis.crypto;
+
+    if (!cryptoObject || typeof cryptoObject.getRandomValues !== 'function') {
+      throw new Error('crypto.getRandomValues is required for secure random generation');
+    }
+
+    return cryptoObject;
+  }
+
   /**
-   * Generate secure random password
-   * (MODIFIED: Now accepts options)
+   * Generate an unbiased cryptographically secure integer in [0, maxExclusive).
+   */
+  static secureRandomInt(maxExclusive) {
+    if (!Number.isInteger(maxExclusive) || maxExclusive <= 0) {
+      throw new Error('maxExclusive must be a positive integer');
+    }
+
+    const cryptoObject = this.getCrypto();
+    const randomValues = new Uint32Array(1);
+    const maxUint32 = 0x100000000;
+    const limit = maxUint32 - (maxUint32 % maxExclusive);
+    let value;
+
+    do {
+      cryptoObject.getRandomValues(randomValues);
+      value = randomValues[0];
+    } while (value >= limit);
+
+    return value % maxExclusive;
+  }
+
+  /**
+   * Lightweight helper for checking password length input.
+   */
+  static isValidPasswordLength(length) {
+    return Number.isInteger(length) && length > 0;
+  }
+
+  /**
+   * Lightweight helper for checking whether a password configuration selects
+   * at least one character class.
+   */
+  static hasSelectedPasswordCharacterClass(options = {}) {
+    return Boolean(options.useUpper || options.useLower || options.useNumbers || options.useSymbols);
+  }
+
+  /**
+   * Lightweight helper for validating UUID v4 output.
+   */
+  static isValidUUIDv4(uuid) {
+    return typeof uuid === 'string'
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid);
+  }
+
+  /**
+   * Generate a cryptographically secure random password using Web Crypto.
+   * The generated password has the requested length and includes at least one
+   * character from every selected class when the length permits it. Security
+   * still depends on selecting sufficient length and character classes.
    */
   static generatePassword(options = {}) {
     const defaults = {
@@ -234,55 +292,74 @@ class DataGenerators {
     };
     const config = { ...defaults, ...options };
 
+    if (!this.isValidPasswordLength(config.length)) {
+      throw new Error('Password length must be a positive integer');
+    }
+
+    if (!this.hasSelectedPasswordCharacterClass(config)) {
+      throw new Error('At least one character type must be selected');
+    }
+
     const charSets = {
       upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
       lower: 'abcdefghijklmnopqrstuvwxyz',
       numbers: '0123456789',
       symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
     };
+    const selectedCharSets = [];
 
-    let password = '';
-    let all = '';
+    if (config.useUpper) selectedCharSets.push(charSets.upper);
+    if (config.useLower) selectedCharSets.push(charSets.lower);
+    if (config.useNumbers) selectedCharSets.push(charSets.numbers);
+    if (config.useSymbols) selectedCharSets.push(charSets.symbols);
 
-    // Ensure at least one of each type
-    if (config.useUpper) {
-      password += charSets.upper[Math.floor(Math.random() * charSets.upper.length)];
-      all += charSets.upper;
-    }
-    if (config.useLower) {
-      password += charSets.lower[Math.floor(Math.random() * charSets.lower.length)];
-      all += charSets.lower;
-    }
-    if (config.useNumbers) {
-      password += charSets.numbers[Math.floor(Math.random() * charSets.numbers.length)];
-      all += charSets.numbers;
-    }
-    if (config.useSymbols) {
-      password += charSets.symbols[Math.floor(Math.random() * charSets.symbols.length)];
-      all += charSets.symbols;
-    }
-    
-    if (all === '') {
-      throw new Error('No character types selected');
+    if (config.length < selectedCharSets.length) {
+      throw new Error('Password length must be at least the number of selected character types');
     }
 
-    // Fill remaining length
-    for (let i = password.length; i < config.length; i++) {
-      password += all[Math.floor(Math.random() * all.length)];
+    const passwordChars = [];
+    const allChars = selectedCharSets.join('');
+
+    // Guarantee one character from each selected class before filling the rest.
+    for (const charSet of selectedCharSets) {
+      passwordChars.push(charSet[this.secureRandomInt(charSet.length)]);
     }
 
-    // Shuffle the password
-    return password.split('').sort(() => 0.5 - Math.random()).join('');
-  } // <-- Ensure this closing brace is here!
+    for (let i = passwordChars.length; i < config.length; i++) {
+      passwordChars.push(allChars[this.secureRandomInt(allChars.length)]);
+    }
+
+    // Fisher-Yates shuffle using crypto.getRandomValues-backed indices.
+    for (let i = passwordChars.length - 1; i > 0; i--) {
+      const j = this.secureRandomInt(i + 1);
+      [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
+    }
+
+    return passwordChars.join('');
+  }
 
   /**
-   * Generate a v4 UUID
+   * Generate an RFC 4122/9562 UUID v4. Uses crypto.randomUUID() when available;
+   * otherwise falls back to manually setting v4 version and variant bits from
+   * crypto.getRandomValues().
    */
   static generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
+    const cryptoObject = this.getCrypto();
+
+    if (typeof cryptoObject.randomUUID === 'function') {
+      return cryptoObject.randomUUID();
+    }
+
+    const randomBytes = new Uint8Array(16);
+    cryptoObject.getRandomValues(randomBytes);
+
+    // UUID v4 version (0100) and RFC variant (10xx) bits.
+    randomBytes[6] = (randomBytes[6] & 0x0f) | 0x40;
+    randomBytes[8] = (randomBytes[8] & 0x3f) | 0x80;
+
+    const hex = Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0'));
+
+    return `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`;
   }
 }
 // Export for use in popup
