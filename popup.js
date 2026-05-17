@@ -10,6 +10,9 @@ class PopupController {
     this.isAutoCopy = localStorage.getItem('dt_auto_copy') === 'true';
     this.authConfig = null;
     this.authTimerInterval = null;
+    this.activeCurlController = null;
+    this.activeCurlTimedOut = false;
+    this.apiRequestTimeoutMs = Number(localStorage.getItem('dt_api_request_timeout_ms')) || 30000;
     
     if (pageId === 'popup-body') {
       this.initPopup();
@@ -370,6 +373,10 @@ class PopupController {
       this.executeCurl();
     });
 
+    document.getElementById('cancelCurl')?.addEventListener('click', () => {
+      this.cancelCurlRequest();
+    });
+
     document.getElementById('saveRequestBtn')?.addEventListener('click', () => {
       this.saveToCollections();
     });
@@ -693,6 +700,7 @@ class PopupController {
     const statusBadge = document.getElementById('responseStatus');
     const timeBadge = document.getElementById('responseTime');
     const executeBtn = document.getElementById('executeCurl');
+    const cancelBtn = document.getElementById('cancelCurl');
 
     if (!input) {
       this.showToast('Please enter a cURL command', 'error');
@@ -702,17 +710,32 @@ class PopupController {
     // Save to history first
     this.saveToHistory(input);
 
+    const controller = new AbortController();
+    let timeoutId = null;
+    this.activeCurlController = controller;
+    this.activeCurlTimedOut = false;
+
     try {
       executeBtn.disabled = true;
       executeBtn.innerHTML = 'Executing...';
+      if (cancelBtn) {
+        cancelBtn.disabled = false;
+        cancelBtn.style.display = 'inline-flex';
+      }
       
       responseContainer.style.display = 'block';
       responseBody.textContent = 'Loading...';
       statusBadge.textContent = '';
       timeBadge.textContent = '';
 
+      timeoutId = window.setTimeout(() => {
+        this.activeCurlTimedOut = true;
+        controller.abort();
+      }, this.apiRequestTimeoutMs);
+
       const startTime = performance.now();
       const { url, options } = CurlParser.parse(input);
+      options.signal = controller.signal;
       
       const response = await fetch(url, options);
       const endTime = performance.now();
@@ -734,16 +757,36 @@ class PopupController {
       timeBadge.textContent = `${duration}ms`;
 
     } catch (error) {
-      responseBody.textContent = `Error: ${error.message}`;
-      statusBadge.textContent = 'Error';
+      const wasAborted = error.name === 'AbortError' || controller.signal.aborted;
+      const message = this.activeCurlTimedOut ? 'Request timed out' : 'Request cancelled';
+
+      responseBody.textContent = wasAborted ? message : `Error: ${error.message}`;
+      statusBadge.textContent = wasAborted ? message : 'Error';
       statusBadge.style.color = 'var(--danger)';
-      this.showToast('Request failed', 'error');
+      this.showToast(wasAborted ? message : 'Request failed', 'error');
     } finally {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+      if (this.activeCurlController === controller) {
+        this.activeCurlController = null;
+        this.activeCurlTimedOut = false;
+      }
       executeBtn.disabled = false;
       executeBtn.innerHTML = `
         <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         Run
       `;
+      if (cancelBtn) {
+        cancelBtn.disabled = true;
+        cancelBtn.style.display = 'none';
+      }
+    }
+  }
+
+  cancelCurlRequest() {
+    if (this.activeCurlController) {
+      this.activeCurlController.abort();
     }
   }
 
