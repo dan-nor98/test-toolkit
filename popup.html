@@ -96,7 +96,13 @@
             />
           </div>
 
-          <div id="clipboardList" class="clipboard-list"></div>
+          <div id="clipboardList" class="clipboard-list" aria-busy="true">
+            <div class="skeleton-list" aria-label="Loading clipboard history">
+              <div class="skeleton-row skeleton-row--clipboard"></div>
+              <div class="skeleton-row skeleton-row--clipboard"></div>
+              <div class="skeleton-row skeleton-row--clipboard"></div>
+            </div>
+          </div>
 
           <details
             class="output-container clipboard-settings"
@@ -478,9 +484,12 @@
           >
             <div class="output-header">
               <label class="output-label">Result</label>
-              <button id="copyOutput" class="btn btn-primary btn-sm">
-                Copy
-              </button>
+              <div class="inline-action-wrap">
+                <span id="generatorStatus" class="inline-status" aria-live="polite"></span>
+                <button id="copyOutput" class="btn btn-primary btn-sm">
+                  Copy
+                </button>
+              </div>
             </div>
             <div id="outputValue" class="output-value"></div>
           </div>
@@ -489,9 +498,12 @@
         <div id="tab-json" class="tab-content">
           <div class="tab-header">
             <h2 class="tab-title">JSON Formatter</h2>
-            <button id="formatJsonBtn" class="btn btn-primary btn-sm">
-              Format
-            </button>
+            <div class="inline-action-wrap">
+              <span id="jsonStatus" class="inline-status" aria-live="polite"></span>
+              <button id="formatJsonBtn" class="btn btn-primary btn-sm">
+                Format
+              </button>
+            </div>
           </div>
           <textarea
             id="jsonInput"
@@ -505,9 +517,12 @@
           >
             <div class="output-header">
               <label class="output-label">Formatted</label>
-              <button id="copyJsonOutput" class="btn btn-primary btn-sm">
-                Copy
-              </button>
+              <div class="inline-action-wrap">
+                <span id="jsonCopyStatus" class="inline-status" aria-live="polite"></span>
+                <button id="copyJsonOutput" class="btn btn-primary btn-sm">
+                  Copy
+                </button>
+              </div>
             </div>
             <pre
               id="jsonOutput"
@@ -591,7 +606,7 @@
               rows="7"
             ></textarea>
             <p id="notesSaveStatus" class="notes-status">
-              Notes are saved locally per website.
+              Loading website notes...
             </p>
           </section>
 
@@ -609,7 +624,12 @@
                 Add
               </button>
             </div>
-            <div id="todoList" class="todo-list"></div>
+            <div id="todoList" class="todo-list" aria-busy="true">
+              <div class="skeleton-list" aria-label="Loading todos">
+                <div class="skeleton-row skeleton-row--todo"></div>
+                <div class="skeleton-row skeleton-row--todo"></div>
+              </div>
+            </div>
           </section>
         </div>
 
@@ -631,6 +651,10 @@
             <p class="api-empty-state__message">
               API Tester requires more space.
             </p>
+            <div class="skeleton-list skeleton-list--api" aria-label="Loading API history and collections">
+              <div class="skeleton-row skeleton-row--api"></div>
+              <div class="skeleton-row skeleton-row--api"></div>
+            </div>
             <button id="openApiTab" class="btn btn-primary btn-spaced-lg">
               Open in New Tab
             </button>

@@ -26,7 +26,7 @@ class PopupController {
     this.currentWebsiteKey = '';
     this.currentWebsiteContext = null;
     this.notesSaveTimer = null;
-    
+
     if (pageId === 'popup-body') {
       this.initPopup();
     } else if (pageId === 'api-tester-body') {
@@ -35,44 +35,87 @@ class PopupController {
   }
 
   async initPopup() {
-    await this.initDatabase();
-    await this.loadClipboardSettings();
+    this.renderInitialLoadingStates();
     this.setupPopupEventListeners();
-    this.loadClipboardHistory();
     this.listenForUpdates();
     this.setupAuthenticatorEventListeners();
-    await this.loadWebsiteNotes();
 
     const toggle = document.getElementById('autoCopyToggle');
     if (toggle) {
       toggle.checked = this.isAutoCopy;
     }
+
+    try {
+      await this.initDatabase();
+      await this.loadClipboardSettings();
+      this.loadClipboardHistory();
+      await this.loadWebsiteNotes();
+    } catch (error) {
+      console.log('Popup initialization failed', error);
+      this.setInlineStatus('generatorStatus', 'Some data could not load.', 'error');
+    }
   }
 
   initApiTester() {
     this.setupApiTesterEventListeners();
-    this.renderApiLists();
+    this.setInlineStatus('apiRequestStatus', 'Loading saved requests...');
+    window.requestAnimationFrame(() => {
+      this.renderApiLists();
+      this.setInlineStatus('apiRequestStatus', 'Ready');
+    });
     this.updateParsedCurlPreview();
     this.setApiResponseState('idle');
+  }
+
+  renderInitialLoadingStates() {
+    this.renderClipboardSkeleton();
+    this.renderTodoSkeleton();
+  }
+
+  renderClipboardSkeleton() {
+    const container = document.getElementById('clipboardList');
+    if (!container) return;
+
+    container.setAttribute('aria-busy', 'true');
+    container.innerHTML = `
+      <div class="skeleton-list" aria-label="Loading clipboard history">
+        <div class="skeleton-row skeleton-row--clipboard"></div>
+        <div class="skeleton-row skeleton-row--clipboard"></div>
+        <div class="skeleton-row skeleton-row--clipboard"></div>
+      </div>
+    `;
+  }
+
+  renderTodoSkeleton() {
+    const container = document.getElementById('todoList');
+    if (!container) return;
+
+    container.setAttribute('aria-busy', 'true');
+    container.innerHTML = `
+      <div class="skeleton-list" aria-label="Loading todos">
+        <div class="skeleton-row skeleton-row--todo"></div>
+        <div class="skeleton-row skeleton-row--todo"></div>
+      </div>
+    `;
   }
 
   // Database Management
   async initDatabase() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open('ClipboardDB', 1);
-      
+
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         this.db = request.result;
         resolve(this.db);
       };
-      
+
       request.onupgradeneeded = (e) => {
         const db = e.target.result;
         if (!db.objectStoreNames.contains('logs')) {
-          const store = db.createObjectStore('logs', { 
-            keyPath: 'id', 
-            autoIncrement: true 
+          const store = db.createObjectStore('logs', {
+            keyPath: 'id',
+            autoIncrement: true
           });
           store.createIndex('timestamp', 'timestamp', { unique: false });
         }
@@ -142,7 +185,7 @@ class PopupController {
       btn.addEventListener('click', () => {
         const panelId = btn.getAttribute('aria-controls');
         const panel = document.getElementById(panelId);
-        
+
         if (panel) {
           const isExpanded = btn.getAttribute('aria-expanded') === 'true';
           if (isExpanded) {
@@ -156,23 +199,23 @@ class PopupController {
       });
     });
 
-    document.getElementById('formatJsonBtn')?.addEventListener('click', () => {
-      this.formatJSON();
+    document.getElementById('formatJsonBtn')?.addEventListener('click', (e) => {
+      this.formatJSON(e.currentTarget);
     });
-    
-    document.getElementById('copyJsonOutput')?.addEventListener('click', () => {
+
+    document.getElementById('copyJsonOutput')?.addEventListener('click', (e) => {
       const text = document.getElementById('jsonOutput').textContent;
-      if (text) this.copyToClipboard(text);
+      if (text) this.copyToClipboard(text, { button: e.currentTarget, statusId: 'jsonCopyStatus' });
       else this.showToast('Nothing to copy', 'error');
      });
 
-    document.getElementById('copyOutput')?.addEventListener('click', () => {
-      this.copyOutputToClipboard();
+    document.getElementById('copyOutput')?.addEventListener('click', (e) => {
+      this.copyOutputToClipboard(e.currentTarget);
     });
 
     document.getElementById('openApiTab')?.addEventListener('click', () => {
       chrome.tabs.create({ url: chrome.runtime.getURL('api-tester.html') });
-      window.close(); 
+      window.close();
     });
 
     document.getElementById('websiteNoteInput')?.addEventListener('input', (e) => {
@@ -439,16 +482,16 @@ class PopupController {
   }
 
   setupApiTesterEventListeners() {
-    document.getElementById('executeCurl')?.addEventListener('click', () => {
-      this.executeCurl();
+    document.getElementById('executeCurl')?.addEventListener('click', (e) => {
+      this.executeCurl(e.currentTarget);
     });
 
     document.getElementById('cancelCurl')?.addEventListener('click', () => {
       this.cancelCurlRequest();
     });
 
-    document.getElementById('saveRequestBtn')?.addEventListener('click', () => {
-      this.saveToCollections();
+    document.getElementById('saveRequestBtn')?.addEventListener('click', (e) => {
+      this.saveToCollections(e.currentTarget);
     });
 
     document.getElementById('curlInput')?.addEventListener('input', () => {
@@ -605,7 +648,15 @@ class PopupController {
   }
 
   async loadClipboardHistory() {
-    if (!this.db) return;
+    const container = document.getElementById('clipboardList');
+    if (!this.db) {
+      if (container) container.setAttribute('aria-busy', 'false');
+      return;
+    }
+
+    if (container && !this.clipboardEntries.length) {
+      this.renderClipboardSkeleton();
+    }
 
     const tx = this.db.transaction('logs', 'readonly');
     const store = tx.objectStore('logs');
@@ -616,6 +667,14 @@ class PopupController {
       this.clipboardEntries = entries;
       this.renderClipboardList(entries);
     };
+
+    request.onerror = () => {
+      if (container) {
+        container.setAttribute('aria-busy', 'false');
+        container.innerHTML = '<div class="empty-state">Clipboard history could not load.</div>';
+      }
+      this.showToast('Clipboard history failed to load', 'error');
+    };
   }
 
   renderClipboardList(entries, filterText = '') {
@@ -625,7 +684,9 @@ class PopupController {
     }
 
     const container = document.getElementById('clipboardList');
-    
+    if (!container) return;
+    container.setAttribute('aria-busy', 'false');
+
     if (!entries || entries.length === 0) {
       const emptyState = filterText ? `<div class="empty-state"><p>No matches found</p></div>` : `
         <div class="empty-state">
@@ -638,12 +699,12 @@ class PopupController {
 
     container.innerHTML = entries.map(entry => {
       return `
-      <div class="clipboard-item"> 
+      <div class="clipboard-item">
         <div class="clipboard-time">${entry.time || entry.date || new Date(entry.timestamp).toLocaleString()}</div>
         <div class="clipboard-text">${this.escapeHtml(entry.text)}</div>
       </div>
     `;}).join('');
-    
+
     // Add click listeners programmatically
     const items = container.querySelectorAll('.clipboard-item');
     items.forEach((item, index) => {
@@ -688,10 +749,13 @@ class PopupController {
   generateData(e) {
     const btn = e.currentTarget;
     const type = btn.dataset.type;
-    const group = btn.closest('.gen-item-group'); 
+    const group = btn.closest('.gen-item-group');
 
     let value = '';
     let formatted = '';
+
+    this.setButtonBusy(btn, true);
+    this.setInlineStatus('generatorStatus', 'Generating...');
 
     try {
       switch (type) {
@@ -728,12 +792,16 @@ class PopupController {
       }
 
       this.displayGeneratedData(formatted || value, value);
-      
+      this.setInlineStatus('generatorStatus', 'Generated', 'success');
+
       if (this.isAutoCopy) {
-        this.copyToClipboard(value);
+        this.copyToClipboard(value, { statusId: 'generatorStatus' });
       }
     } catch (error) {
+      this.setInlineStatus('generatorStatus', 'Generation failed', 'error');
       this.showToast('Generation failed: ' + error.message, 'error');
+    } finally {
+      window.setTimeout(() => this.setButtonBusy(btn, false), 180);
     }
   }
 
@@ -762,16 +830,20 @@ class PopupController {
     container.style.display = 'block';
   }
 
-  copyOutputToClipboard() {
+  copyOutputToClipboard(button) {
     const valueElement = document.getElementById('outputValue');
     const rawValue = valueElement.dataset.raw || valueElement.textContent;
-    this.copyToClipboard(rawValue);
+    this.copyToClipboard(rawValue, { button, statusId: 'generatorStatus' });
   }
 
 
   // Website Notes & Todos
   async loadWebsiteNotes() {
     if (!document.getElementById('tab-notes')) return;
+
+    this.renderTodoSkeleton();
+    const status = document.getElementById('notesSaveStatus');
+    if (status) status.textContent = 'Loading website notes...';
 
     const context = await this.getCurrentWebsiteContext();
     this.currentWebsiteContext = context;
@@ -898,6 +970,7 @@ class PopupController {
   renderWebsiteTodos(todos) {
     const container = document.getElementById('todoList');
     if (!container) return;
+    container.setAttribute('aria-busy', 'false');
 
     if (!this.currentWebsiteKey) {
       container.innerHTML = '<div class="empty-state">Todo list is unavailable for this page.</div>';
@@ -944,7 +1017,7 @@ class PopupController {
 
     record.note = note;
     record.updatedAt = Date.now();
-    this.queueWebsiteNotesSave('Saving note...');
+    this.queueWebsiteNotesSave('Saving…');
   }
 
   addWebsiteTodo() {
@@ -1054,26 +1127,35 @@ class PopupController {
     const newHistory = history.filter(item => item !== curl);
     newHistory.unshift(curl);
     if (newHistory.length > 10) newHistory.pop();
-    
+
     localStorage.setItem('dt_api_history', JSON.stringify(newHistory));
     this.renderApiLists();
   }
 
-  saveToCollections() {
+  saveToCollections(button) {
     const curl = document.getElementById('curlInput').value.trim();
     if (!curl) {
+      this.setInlineStatus('apiRequestStatus', 'Add a cURL command first.', 'error');
       this.showToast('Enter a cURL command first', 'error');
       return;
     }
     const name = prompt('Name this request (e.g., "Prod Login"):');
     if (!name) return;
 
-    const { collections } = this.getApiStorage();
-    const newCollections = [...collections, { id: Date.now(), name, curl }];
-    
-    localStorage.setItem('dt_api_collections', JSON.stringify(newCollections));
-    this.renderApiLists();
-    this.showToast('Request Saved');
+    this.setButtonBusy(button, true, 'Saving...');
+    this.setInlineStatus('apiRequestStatus', 'Saving request...');
+
+    try {
+      const { collections } = this.getApiStorage();
+      const newCollections = [...collections, { id: Date.now(), name, curl }];
+
+      localStorage.setItem('dt_api_collections', JSON.stringify(newCollections));
+      this.renderApiLists();
+      this.setInlineStatus('apiRequestStatus', 'Request saved', 'success');
+      this.showToast('Request Saved');
+    } finally {
+      window.setTimeout(() => this.setButtonBusy(button, false), 180);
+    }
   }
 
   deleteCollectionItem(id) {
@@ -1091,10 +1173,11 @@ class PopupController {
   // REFACTORED: Create elements programmatically to avoid unsafe inline onclick
   renderApiLists() {
     const { history, collections } = this.getApiStorage();
-    
+
     // --- Render Collections ---
     const colList = document.getElementById('collectionList');
     if (colList) {
+      colList.setAttribute('aria-busy', 'false');
       colList.innerHTML = '';
       if (collections.length === 0) {
         colList.innerHTML = '<li class="empty-msg">No saved requests</li>';
@@ -1102,7 +1185,7 @@ class PopupController {
         collections.forEach(item => {
           const li = document.createElement('li');
           li.className = 'req-item';
-          
+
           const span = document.createElement('span');
           span.className = 'req-name';
           span.textContent = item.name;
@@ -1111,7 +1194,7 @@ class PopupController {
           const btn = document.createElement('button');
           btn.className = 'req-delete';
           btn.innerHTML = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
-          
+
           // Delete Event
           btn.addEventListener('click', (e) => {
             e.stopPropagation(); // Stop bubbling to li
@@ -1132,6 +1215,7 @@ class PopupController {
     // --- Render History ---
     const histList = document.getElementById('historyList');
     if (histList) {
+      histList.setAttribute('aria-busy', 'false');
       histList.innerHTML = '';
       if (history.length === 0) {
         histList.innerHTML = '<li class="empty-msg">No recent history</li>';
@@ -1139,9 +1223,9 @@ class PopupController {
         history.forEach(curl => {
           const li = document.createElement('li');
           li.className = 'req-item';
-          
+
           const preview = curl.length > 30 ? curl.substring(0, 30) + '...' : curl;
-          
+
           const span = document.createElement('span');
           span.className = 'req-name';
           span.style.fontFamily = 'monospace';
@@ -1238,20 +1322,21 @@ class PopupController {
     return lines.length ? lines.join('\n') : 'No response headers.';
   }
 
-  async executeCurl() {
-    return this.runCurlRequest();
+  async executeCurl(button) {
+    return this.runCurlRequest(button);
   }
 
-  async runCurlRequest() {
+  async runCurlRequest(button) {
     const input = document.getElementById('curlInput').value.trim();
     const responseBody = document.getElementById('responseBody');
     const statusBadge = document.getElementById('responseStatus');
     const timeBadge = document.getElementById('responseTime');
     const responseHeaders = document.getElementById('responseHeaders');
-    const executeBtn = document.getElementById('executeCurl');
+    const executeBtn = button || document.getElementById('executeCurl');
     const cancelBtn = document.getElementById('cancelCurl');
 
     if (!input) {
+      this.setInlineStatus('apiRequestStatus', 'Paste a cURL command first.', 'error');
       this.showToast('Please enter a cURL command', 'error');
       return;
     }
@@ -1265,8 +1350,8 @@ class PopupController {
     this.activeCurlTimedOut = false;
 
     try {
-      executeBtn.disabled = true;
-      executeBtn.innerHTML = 'Executing...';
+      this.setButtonBusy(executeBtn, true, 'Running...');
+      this.setInlineStatus('apiRequestStatus', 'Running request...');
       if (cancelBtn) {
         cancelBtn.disabled = false;
         cancelBtn.style.display = 'inline-flex';
@@ -1311,6 +1396,7 @@ class PopupController {
         responseHeaders.textContent = this.formatResponseHeaders(response.headers);
       }
       this.setApiResponseState(response.ok ? 'success' : 'error');
+      this.setInlineStatus('apiRequestStatus', response.ok ? 'Request complete' : 'Request returned an error', response.ok ? 'success' : 'error');
     } catch (error) {
       const wasAborted = error.name === 'AbortError' || controller.signal.aborted;
       const state = wasAborted ? (this.activeCurlTimedOut ? 'timeout' : 'cancelled') : 'error';
@@ -1326,6 +1412,7 @@ class PopupController {
         responseHeaders.textContent = 'No response headers.';
       }
       this.setApiResponseState(state);
+      this.setInlineStatus('apiRequestStatus', wasAborted ? message : 'Request failed', 'error');
       this.showToast(wasAborted ? message : 'Request failed', 'error');
     } finally {
       if (timeoutId) {
@@ -1335,11 +1422,7 @@ class PopupController {
         this.activeCurlController = null;
         this.activeCurlTimedOut = false;
       }
-      executeBtn.disabled = false;
-      executeBtn.innerHTML = `
-        <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        Run
-      `;
+      this.setButtonBusy(executeBtn, false);
       if (cancelBtn) {
         cancelBtn.disabled = true;
         cancelBtn.style.display = 'none';
@@ -1355,31 +1438,76 @@ class PopupController {
 
 
   // JSON Formatter
-  formatJSON() {
+  formatJSON(button) {
     const input = document.getElementById('jsonInput').value;
     const responseContainer = document.getElementById('jsonResponse');
     const outputEl = document.getElementById('jsonOutput');
 
     if (!input) {
+      this.setInlineStatus('jsonStatus', 'Paste JSON first.', 'error');
       this.showToast('Please enter JSON to format', 'error');
       return;
     }
+
+    this.setButtonBusy(button, true, 'Formatting...');
+    this.setInlineStatus('jsonStatus', 'Formatting...');
 
     try {
       const parsed = JSON.parse(input);
       const highlighted = this.syntaxHighlightJSON(parsed);
       outputEl.innerHTML = highlighted;
       responseContainer.style.display = 'block';
+      this.setInlineStatus('jsonStatus', 'Formatted', 'success');
     } catch (error) {
       outputEl.textContent = `Invalid JSON: ${error.message}`;
       responseContainer.style.display = 'block';
+      this.setInlineStatus('jsonStatus', 'Invalid JSON', 'error');
       this.showToast('Invalid JSON', 'error');
+    } finally {
+      window.setTimeout(() => this.setButtonBusy(button, false), 180);
     }
   }
 
   // Utility Functions
-  copyToClipboard(text) {
-    if (!text) return;
+  setInlineStatus(id, message, type = '') {
+    const status = document.getElementById(id);
+    if (!status) return;
+
+    status.textContent = message;
+    status.classList.toggle('is-success', type === 'success');
+    status.classList.toggle('is-error', type === 'error');
+  }
+
+  setButtonBusy(button, isBusy, busyLabel = '') {
+    if (!button) return;
+
+    if (isBusy) {
+      if (!button.dataset.defaultHtml) {
+        button.dataset.defaultHtml = button.innerHTML;
+      }
+      button.classList.add('is-busy');
+      button.setAttribute('aria-busy', 'true');
+      button.disabled = true;
+      if (busyLabel) {
+        button.textContent = busyLabel;
+      }
+      return;
+    }
+
+    button.classList.remove('is-busy');
+    button.removeAttribute('aria-busy');
+    button.disabled = false;
+    if (button.dataset.defaultHtml) {
+      button.innerHTML = button.dataset.defaultHtml;
+    }
+  }
+
+  copyToClipboard(text, { button = null, statusId = '' } = {}) {
+    if (!text) return false;
+
+    this.setButtonBusy(button, true, 'Copying...');
+    if (statusId) this.setInlineStatus(statusId, 'Copying...');
+
     const ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'absolute';
@@ -1388,26 +1516,39 @@ class PopupController {
     ta.select();
 
     try {
-      document.execCommand('copy');
+      const didCopy = document.execCommand('copy');
+      if (!didCopy) {
+        throw new Error('Clipboard command was rejected');
+      }
+
+      if (statusId) this.setInlineStatus(statusId, 'Copied', 'success');
       this.showToast('Copied to clipboard!');
       chrome.runtime.sendMessage({ type: 'SAVE_CLIPBOARD', text: text }).catch(() => {});
+      return true;
     } catch (err) {
       console.log('Failed to copy', err);
+      if (statusId) this.setInlineStatus(statusId, 'Copy failed', 'error');
       this.showToast('Failed to copy', 'error');
+      return false;
+    } finally {
+      document.body.removeChild(ta);
+      window.setTimeout(() => this.setButtonBusy(button, false), 180);
     }
-    document.body.removeChild(ta);
   }
 
   showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     const messageEl = document.getElementById('toastMessage');
+    if (!toast || !messageEl) return;
+
     messageEl.textContent = message;
-    
+    toast.classList.toggle('toast--error', type === 'error');
+
     // Reset classes for animation
     toast.classList.remove('show');
     void toast.offsetWidth; // Trigger reflow
     toast.classList.add('show');
-    
+
     setTimeout(() => {
       toast.classList.remove('show');
     }, 2000);
@@ -1451,5 +1592,5 @@ window.addEventListener('beforeunload', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   const pageId = document.body.id;
-  window.popupController = new PopupController(pageId); 
+  window.popupController = new PopupController(pageId);
 });

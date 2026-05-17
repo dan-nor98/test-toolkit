@@ -869,6 +869,14 @@ textarea {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
+.toast--error {
+  border-color: var(--danger);
+}
+
+.toast--error .toast-icon {
+  color: var(--danger);
+}
+
 
 /* --- Popup API Placeholder --- */
 .api-empty-state {
@@ -1442,6 +1450,104 @@ textarea {
 .api-response-body {
   flex: 1;
   max-height: none;
+}
+
+
+/* --- Lightweight loading and inline feedback states --- */
+.inline-action-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.inline-status {
+  min-height: 16px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.inline-status.is-success {
+  color: var(--success);
+}
+
+.inline-status.is-error {
+  color: var(--danger);
+}
+
+.btn.is-busy,
+.gen-item.is-busy {
+  cursor: progress;
+  opacity: 0.72;
+}
+
+.btn:disabled,
+.gen-item:disabled {
+  cursor: not-allowed;
+}
+
+.btn.is-busy::after,
+.gen-item.is-busy::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: spin 0.7s linear infinite;
+}
+
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-list--api {
+  width: min(260px, 100%);
+  margin: 0 auto 16px;
+}
+
+.skeleton-row {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.skeleton-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  animation: shimmer 1.25s ease-in-out infinite;
+}
+
+.skeleton-row--clipboard {
+  height: 58px;
+}
+
+.skeleton-row--todo {
+  height: 42px;
+}
+
+.skeleton-row--api {
+  height: 34px;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 900px) {
