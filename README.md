@@ -73,6 +73,12 @@ Since this extension is not yet on the Chrome Web Store, you can load it locally
 
 ---
 
+## Browser Support
+
+QR import for the Authenticator tool uses the browser-native `BarcodeDetector` API. If your browser does not provide `BarcodeDetector` with QR-code support, uploaded QR images cannot be decoded in the extension. In that case, paste the manual `otpauth://` URI or the Base32 secret key into the Authenticator input instead.
+
+---
+
 ## Tech Stack & Project Structure
 
 This extension is built with **Manifest V3** and pure, "vanilla" JavaScript (ES6+) for maximum performance and minimal overhead.
@@ -89,6 +95,7 @@ This extension is built with **Manifest V3** and pure, "vanilla" JavaScript (ES6
 ## TODO
 
 * Add cURL parser test coverage before expanding edge-case parsing further. Current parser limitations may include unsupported shell expansions, config-file directives, multipart form flags, and less common cURL options.
+* Evaluate adding a local QR decoding fallback library if the project adopts a policy that permits vendored dependencies.
 
 ## Privacy & Offline Behavior
 

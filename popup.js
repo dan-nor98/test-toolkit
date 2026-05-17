@@ -179,7 +179,7 @@ class PopupController {
   async loadAuthFromQrFile(file) {
     try {
       if (!('BarcodeDetector' in window)) {
-        this.showToast('QR detection is not supported in this browser', 'error');
+        this.showToast('QR detection is not supported in this browser. Paste the manual otpauth:// URI or secret key instead.', 'error');
         return;
       }
 
