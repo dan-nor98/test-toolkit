@@ -17,58 +17,95 @@
   </style>
 </head>
 <body id="api-tester-body">
-  
-  <div class="api-wrapper">
-    <aside class="api-sidebar">
-      <div class="sidebar-section">
-        <h3 class="sidebar-title">Collections</h3>
-        <ul id="collectionList" class="req-list">
-          </ul>
-      </div>
-      <div class="sidebar-section" style="border-bottom: none; flex: 1; overflow-y: auto;">
-        <h3 class="sidebar-title">History</h3>
-        <ul id="historyList" class="req-list">
-          </ul>
-      </div>
-    </aside>
-
-    <main class="api-main">
-      <div class="tab-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
-        <h2 class="title" style="font-size: 20px;">API Tester</h2>
-        <div style="display: flex; gap: 8px;">
-          <button id="saveRequestBtn" class="btn btn-primary" style="background: var(--bg-surface); border: 1px solid var(--border-subtle);">
-            <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-            Save
-          </button>
-          <button id="cancelCurl" class="btn btn-primary" style="display: none; background: var(--danger);" disabled>
-            Cancel
-          </button>
-          <button id="executeCurl" class="btn btn-primary">
-            <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            Run
-          </button>
-        </div>
-      </div>
-      
-      <div class="api-container">
+  <main class="api-wrapper" aria-label="API Tester">
+    <section class="api-panel api-request-panel" aria-labelledby="apiRequestTitle">
+      <div class="api-panel__header">
         <div>
-          <label class="output-label">cURL Command</label>
-          <textarea id="curlInput" class="curl-input" placeholder="curl 'https://api.example.com/endpoint' \..." style="height: 150px; font-family: var(--font-mono);"></textarea>
-        </div>
-        
-        <div id="apiResponse" class="output-container" style="display: none;">
-          <div class="output-header">
-            <label class="output-label">Response</label>
-            <div style="display: flex; gap: 8px;">
-              <span id="responseStatus" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #334155;"></span>
-              <span id="responseTime" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #334155;"></span>
-            </div>
-          </div>
-          <pre id="responseBody" class="output-value" style="max-height: 500px; overflow: auto;"></pre>
+          <h1 id="apiRequestTitle" class="title api-title">API Tester</h1>
+          <p class="api-panel__subtitle">Paste a cURL command, review the parsed target, then run or save it.</p>
         </div>
       </div>
-    </main>
-  </div>
+
+      <div class="api-card api-card--grow">
+        <label for="curlInput" class="output-label">cURL Command</label>
+        <textarea id="curlInput" class="curl-input" placeholder="curl 'https://api.example.com/endpoint' \
+  -H 'Authorization: Bearer token'" spellcheck="false"></textarea>
+      </div>
+
+      <div class="api-preview" aria-live="polite">
+        <div class="api-preview__item">
+          <span class="api-preview__label">Method</span>
+          <strong id="requestMethodPreview" class="api-preview__value api-preview__method">—</strong>
+        </div>
+        <div class="api-preview__item api-preview__item--url">
+          <span class="api-preview__label">URL</span>
+          <strong id="requestUrlPreview" class="api-preview__value">Paste a valid cURL command to preview the request.</strong>
+        </div>
+      </div>
+
+      <div class="api-actions" aria-label="Request actions">
+        <button id="saveRequestBtn" class="btn api-secondary-btn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          Save
+        </button>
+        <button id="cancelCurl" class="btn btn-danger" style="display: none;" disabled>
+          Cancel
+        </button>
+        <button id="executeCurl" class="btn btn-primary">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Run
+        </button>
+      </div>
+
+      <div class="api-lists-grid">
+        <section class="api-card api-list-card" aria-labelledby="collectionsTitle">
+          <h2 id="collectionsTitle" class="sidebar-title">Collections</h2>
+          <ul id="collectionList" class="req-list"></ul>
+        </section>
+        <section class="api-card api-list-card" aria-labelledby="historyTitle">
+          <h2 id="historyTitle" class="sidebar-title">History</h2>
+          <ul id="historyList" class="req-list"></ul>
+        </section>
+      </div>
+    </section>
+
+    <section class="api-panel api-response-panel" aria-labelledby="apiResponseTitle">
+      <div class="api-panel__header api-panel__header--response">
+        <div>
+          <h2 id="apiResponseTitle" class="title api-title">Response</h2>
+          <p class="api-panel__subtitle">Status, timing, headers, and response body appear here.</p>
+        </div>
+        <span id="responseState" class="status-pill status-pill--idle">Idle</span>
+      </div>
+
+      <div id="apiResponse" class="output-container api-response-card">
+        <div class="api-response-meta">
+          <div class="api-meta-item">
+            <span class="api-meta-label">Status</span>
+            <span id="responseStatus" class="api-meta-value">Waiting</span>
+          </div>
+          <div class="api-meta-item">
+            <span class="api-meta-label">Timing</span>
+            <span id="responseTime" class="api-meta-value">—</span>
+          </div>
+        </div>
+
+        <div class="api-response-section">
+          <div class="output-header">
+            <label for="responseHeaders" class="output-label">Headers</label>
+          </div>
+          <pre id="responseHeaders" class="output-value api-response-pre">No headers yet.</pre>
+        </div>
+
+        <div class="api-response-section api-response-section--body">
+          <div class="output-header">
+            <label for="responseBody" class="output-label">Body</label>
+          </div>
+          <pre id="responseBody" class="output-value api-response-pre api-response-body">Run a request to view the response body.</pre>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <div id="toast" class="toast">
     <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -51,7 +51,9 @@ class PopupController {
 
   initApiTester() {
     this.setupApiTesterEventListeners();
-    this.renderApiLists(); 
+    this.renderApiLists();
+    this.updateParsedCurlPreview();
+    this.setApiResponseState('idle');
   }
 
   // Database Management
@@ -445,6 +447,10 @@ class PopupController {
 
     document.getElementById('saveRequestBtn')?.addEventListener('click', () => {
       this.saveToCollections();
+    });
+
+    document.getElementById('curlInput')?.addEventListener('input', () => {
+      this.updateParsedCurlPreview();
     });
   }
 
@@ -1061,6 +1067,7 @@ class PopupController {
 
   loadCurlIntoInput(curl) {
     document.getElementById('curlInput').value = curl;
+    this.updateParsedCurlPreview();
   }
 
   // REFACTORED: Create elements programmatically to avoid unsafe inline onclick
@@ -1136,12 +1143,93 @@ class PopupController {
   }
 
   // API Execution
+  updateParsedCurlPreview() {
+    const input = document.getElementById('curlInput')?.value?.trim() || '';
+    const methodPreview = document.getElementById('requestMethodPreview');
+    const urlPreview = document.getElementById('requestUrlPreview');
+
+    if (!methodPreview || !urlPreview) return;
+
+    if (!input) {
+      methodPreview.textContent = '—';
+      urlPreview.textContent = 'Paste a valid cURL command to preview the request.';
+      urlPreview.title = '';
+      return;
+    }
+
+    try {
+      const { url, options } = CurlParser.parse(input);
+      methodPreview.textContent = options.method || 'GET';
+      urlPreview.textContent = url;
+      urlPreview.title = url;
+    } catch (error) {
+      methodPreview.textContent = 'Invalid';
+      urlPreview.textContent = error.message || 'Unable to parse cURL command.';
+      urlPreview.title = '';
+    }
+  }
+
+  setApiResponseState(state, { statusText = '', durationText = '', bodyText = '', headersText = '' } = {}) {
+    const responseState = document.getElementById('responseState');
+    const statusBadge = document.getElementById('responseStatus');
+    const timeBadge = document.getElementById('responseTime');
+    const responseBody = document.getElementById('responseBody');
+    const responseHeaders = document.getElementById('responseHeaders');
+    const normalizedState = ['idle', 'loading', 'success', 'error', 'cancelled', 'timeout'].includes(state)
+      ? state
+      : 'idle';
+
+    if (responseState) {
+      responseState.className = `status-pill status-pill--${normalizedState}`;
+      responseState.textContent = normalizedState;
+    }
+
+    if (statusBadge) {
+      if (statusText) {
+        statusBadge.textContent = statusText;
+      }
+      const statusColors = {
+        idle: 'var(--text-muted)',
+        loading: 'var(--primary)',
+        success: 'var(--success)',
+        error: 'var(--danger)',
+        cancelled: '#f59e0b',
+        timeout: 'var(--danger)'
+      };
+      statusBadge.style.color = statusColors[normalizedState] || 'var(--text-muted)';
+    }
+
+    if (timeBadge && durationText) {
+      timeBadge.textContent = durationText;
+    }
+
+    if (responseBody && bodyText) {
+      responseBody.textContent = bodyText;
+    }
+
+    if (responseHeaders && headersText) {
+      responseHeaders.textContent = headersText;
+    }
+  }
+
+  formatResponseHeaders(headers) {
+    const lines = [];
+    headers.forEach((value, key) => {
+      lines.push(`${key}: ${value}`);
+    });
+    return lines.length ? lines.join('\n') : 'No response headers.';
+  }
+
   async executeCurl() {
+    return this.runCurlRequest();
+  }
+
+  async runCurlRequest() {
     const input = document.getElementById('curlInput').value.trim();
-    const responseContainer = document.getElementById('apiResponse');
     const responseBody = document.getElementById('responseBody');
     const statusBadge = document.getElementById('responseStatus');
     const timeBadge = document.getElementById('responseTime');
+    const responseHeaders = document.getElementById('responseHeaders');
     const executeBtn = document.getElementById('executeCurl');
     const cancelBtn = document.getElementById('cancelCurl');
 
@@ -1165,11 +1253,13 @@ class PopupController {
         cancelBtn.disabled = false;
         cancelBtn.style.display = 'inline-flex';
       }
-      
-      responseContainer.style.display = 'block';
-      responseBody.textContent = 'Loading...';
-      statusBadge.textContent = '';
-      timeBadge.textContent = '';
+
+      this.setApiResponseState('loading', {
+        statusText: 'Running',
+        durationText: '—',
+        headersText: 'Waiting for response headers...',
+        bodyText: 'Loading...'
+      });
 
       timeoutId = window.setTimeout(() => {
         this.activeCurlTimedOut = true;
@@ -1179,33 +1269,45 @@ class PopupController {
       const startTime = performance.now();
       const { url, options } = CurlParser.parse(input);
       options.signal = controller.signal;
-      
+      this.updateParsedCurlPreview();
+
       const response = await fetch(url, options);
       const endTime = performance.now();
       const duration = Math.round(endTime - startTime);
-
+      const statusText = `${response.status} ${response.statusText}`.trim();
       const contentType = response.headers.get('content-type');
       let responseData;
-      
+
       if (contentType && contentType.includes('application/json')) {
         responseData = await response.json();
         responseBody.innerHTML = this.syntaxHighlightJSON(responseData);
       } else {
         responseData = await response.text();
-        responseBody.textContent = responseData;
+        responseBody.textContent = responseData || '(empty response body)';
       }
 
-      statusBadge.textContent = `${response.status} ${response.statusText}`;
+      statusBadge.textContent = statusText;
       statusBadge.style.color = response.ok ? 'var(--success)' : 'var(--danger)';
       timeBadge.textContent = `${duration}ms`;
-
+      if (responseHeaders) {
+        responseHeaders.textContent = this.formatResponseHeaders(response.headers);
+      }
+      this.setApiResponseState(response.ok ? 'success' : 'error');
     } catch (error) {
       const wasAborted = error.name === 'AbortError' || controller.signal.aborted;
-      const message = this.activeCurlTimedOut ? 'Request timed out' : 'Request cancelled';
+      const state = wasAborted ? (this.activeCurlTimedOut ? 'timeout' : 'cancelled') : 'error';
+      const message = wasAborted
+        ? (this.activeCurlTimedOut ? 'Request timed out' : 'Request cancelled')
+        : `Error: ${error.message}`;
 
-      responseBody.textContent = wasAborted ? message : `Error: ${error.message}`;
+      responseBody.textContent = message;
       statusBadge.textContent = wasAborted ? message : 'Error';
       statusBadge.style.color = 'var(--danger)';
+      timeBadge.textContent = '—';
+      if (responseHeaders) {
+        responseHeaders.textContent = 'No response headers.';
+      }
+      this.setApiResponseState(state);
       this.showToast(wasAborted ? message : 'Request failed', 'error');
     } finally {
       if (timeoutId) {
@@ -1232,6 +1334,7 @@ class PopupController {
       this.activeCurlController.abort();
     }
   }
+
 
   // JSON Formatter
   formatJSON() {
