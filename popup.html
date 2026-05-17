@@ -11,8 +11,9 @@
       <header class="app-header">
         <div>
           <h1 class="title">DevToolkit</h1>
-          <p class="subtitle">Search, capture, generate, and inspect faster</p>
+          <p class="subtitle">Local-first developer utilities</p>
         </div>
+        <span id="appContextLabel" class="context-pill">Current site</span>
       </header>
 
       <section class="command-bar" aria-label="Tool command center">
@@ -26,65 +27,68 @@
             autocomplete="off"
           />
         </label>
-
-        <nav class="tabs" aria-label="Tool navigation">
-          <div class="tab-group">
-            <p class="tab-group-title">Capture</p>
-            <button
-              class="tab-btn"
-              data-tab="clipboard"
-              data-keywords="capture clipboard history copy paste"
-            >
-              <span>Clipboard</span>
-            </button>
-            <button
-              class="tab-btn"
-              data-tab="notes"
-              data-keywords="capture notes website memo"
-            >
-              <span>Notes</span>
-            </button>
-          </div>
-
-          <div class="tab-group">
-            <p class="tab-group-title">Generate</p>
-            <button
-              class="tab-btn active"
-              data-tab="generator"
-              data-keywords="generate test data fake name phone email"
-            >
-              <span>Test Data</span>
-            </button>
-            <button
-              class="tab-btn"
-              data-tab="auth"
-              data-keywords="generate authenticator totp otp auth"
-            >
-              <span>Authenticator</span>
-            </button>
-          </div>
-
-          <div class="tab-group">
-            <p class="tab-group-title">Inspect</p>
-            <button
-              class="tab-btn"
-              data-tab="json"
-              data-keywords="inspect json format validate parse"
-            >
-              <span>JSON</span>
-            </button>
-            <button
-              class="tab-btn"
-              data-tab="api"
-              data-keywords="inspect api tester request curl http"
-            >
-              <span>API Tester</span>
-            </button>
-          </div>
-        </nav>
       </section>
 
-      <main class="workspace" aria-label="Tool workspace">
+      <main class="workspace workspace-shell" aria-label="Tool workspace">
+        <aside class="tool-rail" aria-label="Tool groups">
+          <nav class="tabs" aria-label="Tool navigation">
+            <div class="tab-group">
+              <p class="tab-group-title">Capture</p>
+              <button
+                class="tab-btn"
+                data-tab="clipboard"
+                data-keywords="capture clipboard history copy paste"
+              >
+                <span>Clipboard</span>
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="notes"
+                data-keywords="capture notes website memo"
+              >
+                <span>Notes</span>
+              </button>
+            </div>
+
+            <div class="tab-group">
+              <p class="tab-group-title">Generate</p>
+              <button
+                class="tab-btn active"
+                data-tab="generator"
+                data-keywords="generate test data fake name phone email"
+              >
+                <span>Test Data</span>
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="auth"
+                data-keywords="generate authenticator totp otp auth"
+              >
+                <span>Authenticator</span>
+              </button>
+            </div>
+
+            <div class="tab-group">
+              <p class="tab-group-title">Inspect</p>
+              <button
+                class="tab-btn"
+                data-tab="json"
+                data-keywords="inspect json format validate parse"
+              >
+                <span>JSON</span>
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="api"
+                data-keywords="inspect api tester request curl http"
+              >
+                <span>API Tester</span>
+              </button>
+            </div>
+          </nav>
+        </aside>
+
+        <section class="workspace-panel" aria-label="Selected tool">
         <div id="tab-clipboard" class="tab-content">
           <section class="panel" aria-labelledby="clipboardPanelTitle">
             <header class="panel-header">
@@ -749,6 +753,7 @@
             </div>
           </section>
         </div>
+        </section>
       </main>
 
       <div class="status-layer" aria-live="polite" aria-atomic="true">

@@ -196,10 +196,22 @@ body {
   margin: var(--space-1) 0 0;
 }
 
+.context-pill {
+  max-width: 140px;
+  padding: var(--space-3) var(--space-5);
+  overflow: hidden;
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-panel-soft);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* --- Command Navigation --- */
 .command-bar {
-  display: grid;
-  gap: var(--space-6);
   padding: var(--space-7) var(--space-8) var(--space-8);
   background:
     radial-gradient(
@@ -257,10 +269,31 @@ body {
   color: var(--color-text-muted);
 }
 
-.tabs {
+.workspace-shell {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-5);
+  grid-template-columns: 118px minmax(0, 1fr);
+  background: var(--color-bg);
+}
+
+.tool-rail {
+  min-height: 0;
+  padding: var(--space-8) var(--space-5) var(--space-8) var(--space-8);
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border);
+  background: linear-gradient(180deg, var(--color-surface-panel-soft), var(--color-bg));
+}
+
+.workspace-panel {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }
 
 .tab-group {
@@ -281,11 +314,11 @@ body {
 
 .tab-btn {
   width: 100%;
-  min-height: 34px;
+  min-height: 32px;
   background: var(--color-surface-translucent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: var(--space-4) 9px;
+  padding: var(--space-4) var(--space-5);
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -333,7 +366,7 @@ body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-10);
+  padding: var(--space-8);
   animation: fadeIn var(--transition-fast);
 }
 .tab-content.active {
@@ -1341,6 +1374,7 @@ textarea {
 #api-tester-body .api-wrapper {
   display: grid;
   grid-template-columns: minmax(360px, 0.95fr) minmax(420px, 1.05fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: var(--space-10);
   height: 100vh;
   padding: var(--space-12);
@@ -1349,6 +1383,20 @@ textarea {
     radial-gradient(circle at 8% 0%, var(--color-accent-glow), transparent 30%),
     radial-gradient(circle at 94% 18%, var(--color-accent-soft), transparent 28%),
     var(--color-bg);
+}
+
+.api-topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  min-width: 0;
+  padding: var(--space-8) var(--space-9);
+  background: var(--color-surface-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-lg);
 }
 
 .api-panel {
@@ -1453,6 +1501,7 @@ textarea {
 
 .api-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: var(--space-5);
   flex-wrap: wrap;
@@ -1733,6 +1782,11 @@ textarea {
     padding: var(--space-8);
   }
 
+  .api-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .api-panel {
     overflow: visible;
   }
@@ -1746,5 +1800,23 @@ textarea {
   .api-response-card,
   .api-response-body {
     min-height: 320px;
+  }
+}
+
+
+@media (max-width: 380px) {
+  .workspace-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
   }
 }
