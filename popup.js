@@ -22,6 +22,10 @@ class PopupController {
     this.activeCurlController = null;
     this.activeCurlTimedOut = false;
     this.apiRequestTimeoutMs = Number(localStorage.getItem('dt_api_request_timeout_ms')) || 30000;
+    this.websiteNotes = {};
+    this.currentWebsiteKey = '';
+    this.currentWebsiteContext = null;
+    this.notesSaveTimer = null;
     
     if (pageId === 'popup-body') {
       this.initPopup();
@@ -37,6 +41,7 @@ class PopupController {
     this.loadClipboardHistory();
     this.listenForUpdates();
     this.setupAuthenticatorEventListeners();
+    await this.loadWebsiteNotes();
 
     const toggle = document.getElementById('autoCopyToggle');
     if (toggle) {
@@ -148,6 +153,25 @@ class PopupController {
     document.getElementById('openApiTab')?.addEventListener('click', () => {
       chrome.tabs.create({ url: chrome.runtime.getURL('api-tester.html') });
       window.close(); 
+    });
+
+    document.getElementById('websiteNoteInput')?.addEventListener('input', (e) => {
+      this.updateWebsiteNote(e.target.value);
+    });
+
+    document.getElementById('addTodoBtn')?.addEventListener('click', () => {
+      this.addWebsiteTodo();
+    });
+
+    document.getElementById('todoInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.addWebsiteTodo();
+      }
+    });
+
+    document.getElementById('clearWebsiteNotes')?.addEventListener('click', () => {
+      this.clearCurrentWebsiteNotes();
     });
   }
 
@@ -410,6 +434,10 @@ class PopupController {
 
   // Tab Management
   switchTab(tabName) {
+    if (tabName === 'notes') {
+      this.loadWebsiteNotes();
+    }
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabName);
     });
@@ -661,6 +689,254 @@ class PopupController {
     const valueElement = document.getElementById('outputValue');
     const rawValue = valueElement.dataset.raw || valueElement.textContent;
     this.copyToClipboard(rawValue);
+  }
+
+
+  // Website Notes & Todos
+  async loadWebsiteNotes() {
+    if (!document.getElementById('tab-notes')) return;
+
+    const context = await this.getCurrentWebsiteContext();
+    this.currentWebsiteContext = context;
+    this.currentWebsiteKey = context?.key || '';
+
+    const stored = await this.getStorageLocal(['websiteNotes']);
+    this.websiteNotes = this.normalizeWebsiteNotes(stored.websiteNotes);
+    this.ensureCurrentWebsiteRecord();
+    this.renderWebsiteNotes();
+  }
+
+  getCurrentWebsiteContext() {
+    return new Promise((resolve) => {
+      if (!chrome.tabs?.query) {
+        resolve(null);
+        return;
+      }
+
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs?.[0];
+        if (!tab?.url) {
+          resolve(null);
+          return;
+        }
+
+        try {
+          const parsed = new URL(tab.url);
+          const host = parsed.hostname || parsed.protocol.replace(':', '');
+          const key = parsed.origin && parsed.origin !== 'null' ? parsed.origin : tab.url.split('#')[0];
+          resolve({
+            key,
+            url: tab.url,
+            title: tab.title || host || 'Current page',
+            hostname: host || key
+          });
+        } catch {
+          resolve({
+            key: tab.url.split('#')[0],
+            url: tab.url,
+            title: tab.title || 'Current page',
+            hostname: tab.url
+          });
+        }
+      });
+    });
+  }
+
+  normalizeWebsiteNotes(notes = {}) {
+    if (!notes || typeof notes !== 'object' || Array.isArray(notes)) {
+      return {};
+    }
+
+    return Object.entries(notes).reduce((normalized, [key, value]) => {
+      if (!key || !value || typeof value !== 'object') return normalized;
+
+      normalized[key] = {
+        title: String(value.title || ''),
+        url: String(value.url || ''),
+        hostname: String(value.hostname || key),
+        note: String(value.note || ''),
+        updatedAt: Number(value.updatedAt) || Date.now(),
+        todos: Array.isArray(value.todos)
+          ? value.todos.map(todo => ({
+              id: String(todo.id || `${Date.now()}-${Math.random()}`),
+              text: String(todo.text || '').trim(),
+              done: Boolean(todo.done),
+              createdAt: Number(todo.createdAt) || Date.now()
+            })).filter(todo => todo.text)
+          : []
+      };
+      return normalized;
+    }, {});
+  }
+
+  ensureCurrentWebsiteRecord() {
+    if (!this.currentWebsiteKey || !this.currentWebsiteContext) return;
+
+    const existing = this.websiteNotes[this.currentWebsiteKey] || {};
+    this.websiteNotes[this.currentWebsiteKey] = {
+      title: this.currentWebsiteContext.title,
+      url: this.currentWebsiteContext.url,
+      hostname: this.currentWebsiteContext.hostname,
+      note: existing.note || '',
+      todos: Array.isArray(existing.todos) ? existing.todos : [],
+      updatedAt: existing.updatedAt || Date.now()
+    };
+  }
+
+  getCurrentWebsiteRecord() {
+    if (!this.currentWebsiteKey) return null;
+    this.ensureCurrentWebsiteRecord();
+    return this.websiteNotes[this.currentWebsiteKey];
+  }
+
+  renderWebsiteNotes() {
+    const siteLabel = document.getElementById('notesSiteLabel');
+    const noteInput = document.getElementById('websiteNoteInput');
+    const status = document.getElementById('notesSaveStatus');
+    const clearBtn = document.getElementById('clearWebsiteNotes');
+
+    if (!this.currentWebsiteKey) {
+      if (siteLabel) siteLabel.textContent = 'Open a website tab to save notes.';
+      if (noteInput) {
+        noteInput.value = '';
+        noteInput.disabled = true;
+      }
+      if (status) status.textContent = 'Website notes are unavailable for this page.';
+      if (clearBtn) clearBtn.disabled = true;
+      this.renderWebsiteTodos([]);
+      return;
+    }
+
+    const record = this.getCurrentWebsiteRecord();
+    if (siteLabel) siteLabel.textContent = record.hostname || record.title || this.currentWebsiteKey;
+    if (noteInput) {
+      noteInput.disabled = false;
+      noteInput.value = record.note || '';
+    }
+    if (status) status.textContent = 'Notes are saved locally per website.';
+    if (clearBtn) clearBtn.disabled = false;
+    this.renderWebsiteTodos(record.todos || []);
+  }
+
+  renderWebsiteTodos(todos) {
+    const container = document.getElementById('todoList');
+    if (!container) return;
+
+    if (!this.currentWebsiteKey) {
+      container.innerHTML = '<div class="empty-state">Todo list is unavailable for this page.</div>';
+      return;
+    }
+
+    if (!todos.length) {
+      container.innerHTML = '<div class="empty-state">No website todos yet.</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    todos.forEach((todo) => {
+      const item = document.createElement('div');
+      item.className = `todo-item${todo.done ? ' is-done' : ''}`;
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = todo.done;
+      checkbox.setAttribute('aria-label', `Mark ${todo.text} as ${todo.done ? 'not done' : 'done'}`);
+      checkbox.addEventListener('change', () => this.toggleWebsiteTodo(todo.id));
+      item.appendChild(checkbox);
+
+      const text = document.createElement('div');
+      text.className = 'todo-text';
+      text.textContent = todo.text;
+      item.appendChild(text);
+
+      const del = document.createElement('button');
+      del.className = 'todo-delete';
+      del.type = 'button';
+      del.title = 'Delete todo';
+      del.textContent = '×';
+      del.addEventListener('click', () => this.deleteWebsiteTodo(todo.id));
+      item.appendChild(del);
+
+      container.appendChild(item);
+    });
+  }
+
+  updateWebsiteNote(note) {
+    const record = this.getCurrentWebsiteRecord();
+    if (!record) return;
+
+    record.note = note;
+    record.updatedAt = Date.now();
+    this.queueWebsiteNotesSave('Saving note...');
+  }
+
+  addWebsiteTodo() {
+    const input = document.getElementById('todoInput');
+    const text = input?.value?.trim();
+    const record = this.getCurrentWebsiteRecord();
+
+    if (!record) {
+      this.showToast('Open a website tab first', 'error');
+      return;
+    }
+    if (!text) {
+      this.showToast('Enter a todo first', 'error');
+      return;
+    }
+
+    record.todos.unshift({
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      text,
+      done: false,
+      createdAt: Date.now()
+    });
+    record.updatedAt = Date.now();
+    if (input) input.value = '';
+    this.renderWebsiteTodos(record.todos);
+    this.queueWebsiteNotesSave('Todo added. Saving...');
+  }
+
+  toggleWebsiteTodo(id) {
+    const record = this.getCurrentWebsiteRecord();
+    if (!record) return;
+
+    const todo = record.todos.find(item => item.id === id);
+    if (!todo) return;
+
+    todo.done = !todo.done;
+    record.updatedAt = Date.now();
+    this.renderWebsiteTodos(record.todos);
+    this.queueWebsiteNotesSave('Saving todo...');
+  }
+
+  deleteWebsiteTodo(id) {
+    const record = this.getCurrentWebsiteRecord();
+    if (!record) return;
+
+    record.todos = record.todos.filter(item => item.id !== id);
+    record.updatedAt = Date.now();
+    this.renderWebsiteTodos(record.todos);
+    this.queueWebsiteNotesSave('Deleting todo...');
+  }
+
+  clearCurrentWebsiteNotes() {
+    if (!this.currentWebsiteKey) return;
+
+    delete this.websiteNotes[this.currentWebsiteKey];
+    this.ensureCurrentWebsiteRecord();
+    this.renderWebsiteNotes();
+    this.queueWebsiteNotesSave('Clearing notes...');
+  }
+
+  queueWebsiteNotesSave(statusText = 'Saving...') {
+    const status = document.getElementById('notesSaveStatus');
+    if (status) status.textContent = statusText;
+
+    clearTimeout(this.notesSaveTimer);
+    this.notesSaveTimer = setTimeout(async () => {
+      await this.setStorageLocal({ websiteNotes: this.websiteNotes });
+      if (status) status.textContent = 'Saved locally for this website.';
+    }, 250);
   }
 
   // --- API History & Collections Logic ---
