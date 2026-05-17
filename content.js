@@ -82,6 +82,7 @@ document.addEventListener('copy', handleCopy, { passive: true });
 // Clean up on unload
 window.addEventListener('beforeunload', () => {
   document.removeEventListener('copy', handleCopy);
+  document.removeEventListener('contextmenu', handleContextMenu, true);
 });
 
 
@@ -95,25 +96,114 @@ const EDITABLE_INPUT_TYPES = new Set([
   'number'
 ]);
 
+let lastEditableContextMenuTarget = null;
+let lastEditableContextMenuPath = '';
+
+function getElementSelectorPath(element) {
+  if (!element || element.nodeType !== Node.ELEMENT_NODE) {
+    return '';
+  }
+
+  const path = [];
+  let current = element;
+
+  while (current && current.nodeType === Node.ELEMENT_NODE && current !== document.documentElement) {
+    const tagName = current.tagName.toLowerCase();
+
+    if (current.id) {
+      path.unshift(`${tagName}#${CSS.escape(current.id)}`);
+      break;
+    }
+
+    const parent = current.parentElement;
+    if (!parent) {
+      path.unshift(tagName);
+      break;
+    }
+
+    const sameTagSiblings = Array.from(parent.children).filter(
+      sibling => sibling.tagName === current.tagName
+    );
+    const position = sameTagSiblings.indexOf(current) + 1;
+    path.unshift(sameTagSiblings.length > 1 ? `${tagName}:nth-of-type(${position})` : tagName);
+    current = parent;
+  }
+
+  return path.join(' > ');
+}
+
+function getContextMenuEditableTarget(event) {
+  const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+  const candidates = path.length ? path : [event.target];
+
+  for (const candidate of candidates) {
+    if (AutofillManager.isAutofillCompatible(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function handleContextMenu(event) {
+  const editableTarget = getContextMenuEditableTarget(event);
+
+  if (!editableTarget) {
+    lastEditableContextMenuTarget = null;
+    lastEditableContextMenuPath = '';
+    return;
+  }
+
+  lastEditableContextMenuTarget = editableTarget;
+  lastEditableContextMenuPath = getElementSelectorPath(editableTarget);
+}
+
+document.addEventListener('contextmenu', handleContextMenu, true);
+
 class AutofillManager {
   static insertIntoActiveElement(text) {
-    const activeEl = document.activeElement;
+    try {
+      const targetEl = this.getInsertionTarget();
 
-    if (!activeEl) {
-      console.log('DevToolkit: No active element found');
+      if (!targetEl) {
+        console.log('DevToolkit: No active or context-menu element found');
+        return false;
+      }
+
+      if (this.isContentEditable(targetEl)) {
+        return this.insertIntoContentEditable(targetEl, text);
+      }
+
+      if (this.isTextInput(targetEl)) {
+        return this.insertIntoTextInput(targetEl, text);
+      }
+
+      console.log('DevToolkit: Target element is not autofill-compatible');
       return false;
+    } finally {
+      this.clearLastContextMenuTarget();
+    }
+  }
+
+  static getInsertionTarget() {
+    if (lastEditableContextMenuTarget?.isConnected) {
+      return lastEditableContextMenuTarget;
     }
 
-    if (this.isContentEditable(activeEl)) {
-      return this.insertIntoContentEditable(activeEl, text);
+    if (lastEditableContextMenuPath) {
+      console.log('DevToolkit: Last context-menu target is unavailable', lastEditableContextMenuPath);
     }
 
-    if (this.isTextInput(activeEl)) {
-      return this.insertIntoTextInput(activeEl, text);
-    }
+    return document.activeElement;
+  }
 
-    console.log('DevToolkit: Active element is not autofill-compatible');
-    return false;
+  static clearLastContextMenuTarget() {
+    lastEditableContextMenuTarget = null;
+    lastEditableContextMenuPath = '';
+  }
+
+  static isAutofillCompatible(element) {
+    return this.isContentEditable(element) || this.isTextInput(element);
   }
 
   static isContentEditable(element) {
