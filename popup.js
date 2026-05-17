@@ -126,6 +126,8 @@ class PopupController {
       btn.addEventListener('click', (e) => this.generateData(e));
     });
 
+    document.addEventListener('keydown', (e) => this.handleGeneratorShortcut(e));
+
     // Auto Copy Toggle
     document.getElementById('autoCopyToggle')?.addEventListener('change', (e) => {
       this.isAutoCopy = e.target.checked;
@@ -639,6 +641,23 @@ class PopupController {
       this.loadClipboardHistory();
       this.showToast('Clipboard history cleared');
     };
+  }
+
+  handleGeneratorShortcut(e) {
+    const activeElement = document.activeElement;
+    const isTyping = activeElement?.matches?.('input, textarea, select, [contenteditable="true"]');
+
+    if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || isTyping) {
+      return;
+    }
+
+    const target = document.querySelector(`.gen-item[data-shortcut="${e.key}"]`);
+    if (!target) {
+      return;
+    }
+
+    e.preventDefault();
+    target.click();
   }
 
   // Generator Logic

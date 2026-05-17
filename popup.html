@@ -186,8 +186,13 @@
               <span class="toggle-text">Auto Copy</span>
             </label>
           </div>
-          <div class="gen-container">
-            <button class="gen-item" data-type="name">
+          <div class="gen-container" role="list" aria-label="Generator commands">
+            <button
+              class="gen-item"
+              data-type="name"
+              data-shortcut="1"
+              role="listitem"
+            >
               <svg
                 class="gen-item__icon"
                 viewBox="0 0 24 24"
@@ -198,10 +203,19 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              <span>Persian Name</span>
+              <span class="gen-item__body">
+                <span class="gen-item__label">Persian Name</span>
+                <span class="gen-item__description">Example: علی رضایی</span>
+              </span>
+              <kbd class="gen-item__shortcut">Alt 1</kbd>
             </button>
 
-            <button class="gen-item" data-type="phone">
+            <button
+              class="gen-item"
+              data-type="phone"
+              data-shortcut="2"
+              role="listitem"
+            >
               <svg
                 class="gen-item__icon"
                 viewBox="0 0 24 24"
@@ -213,10 +227,19 @@
                   d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
                 ></path>
               </svg>
-              <span>Phone</span>
+              <span class="gen-item__body">
+                <span class="gen-item__label">Phone</span>
+                <span class="gen-item__description">09xx xxx xxxx</span>
+              </span>
+              <kbd class="gen-item__shortcut">Alt 2</kbd>
             </button>
 
-            <button class="gen-item" data-type="nationalCode">
+            <button
+              class="gen-item"
+              data-type="nationalCode"
+              data-shortcut="3"
+              role="listitem"
+            >
               <svg
                 class="gen-item__icon"
                 viewBox="0 0 24 24"
@@ -229,10 +252,19 @@
                 <line x1="8" y1="2" x2="8" y2="6"></line>
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
-              <span>National Code</span>
+              <span class="gen-item__body">
+                <span class="gen-item__label">National Code</span>
+                <span class="gen-item__description">10-digit Iranian ID</span>
+              </span>
+              <kbd class="gen-item__shortcut">Alt 3</kbd>
             </button>
 
-            <button class="gen-item" data-type="bankCard">
+            <button
+              class="gen-item"
+              data-type="bankCard"
+              data-shortcut="4"
+              role="listitem"
+            >
               <svg
                 class="gen-item__icon"
                 viewBox="0 0 24 24"
@@ -243,10 +275,19 @@
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                 <line x1="1" y1="10" x2="23" y2="10"></line>
               </svg>
-              <span>Bank Card</span>
+              <span class="gen-item__body">
+                <span class="gen-item__label">Bank Card</span>
+                <span class="gen-item__description">#### #### #### ####</span>
+              </span>
+              <kbd class="gen-item__shortcut">Alt 4</kbd>
             </button>
 
-            <button class="gen-item" data-type="sheba">
+            <button
+              class="gen-item"
+              data-type="sheba"
+              data-shortcut="5"
+              role="listitem"
+            >
               <svg
                 class="gen-item__icon"
                 viewBox="0 0 24 24"
@@ -259,10 +300,19 @@
                   d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                 ></path>
               </svg>
-              <span>Sheba (IBAN)</span>
+              <span class="gen-item__body">
+                <span class="gen-item__label">Sheba (IBAN)</span>
+                <span class="gen-item__description">IR## #### #### #### #### #### ##</span>
+              </span>
+              <kbd class="gen-item__shortcut">Alt 5</kbd>
             </button>
 
-            <button class="gen-item" data-type="email">
+            <button
+              class="gen-item"
+              data-type="email"
+              data-shortcut="6"
+              role="listitem"
+            >
               <svg
                 class="gen-item__icon"
                 viewBox="0 0 24 24"
@@ -275,10 +325,19 @@
                 ></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
-              <span>Email</span>
+              <span class="gen-item__body">
+                <span class="gen-item__label">Email</span>
+                <span class="gen-item__description">name@example.test</span>
+              </span>
+              <kbd class="gen-item__shortcut">Alt 6</kbd>
             </button>
 
-            <button class="gen-item" data-type="uuid">
+            <button
+              class="gen-item"
+              data-type="uuid"
+              data-shortcut="7"
+              role="listitem"
+            >
               <svg
                 class="gen-item__icon"
                 viewBox="0 0 24 24"
@@ -290,12 +349,20 @@
                   d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4m-2.83-7.07l-2.83 2.83M16.24 16.24l-2.83 2.83"
                 ></path>
               </svg>
-              <span>UUID v4</span>
+              <span class="gen-item__body">
+                <span class="gen-item__label">UUID v4</span>
+                <span class="gen-item__description">xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx</span>
+              </span>
+              <kbd class="gen-item__shortcut">Alt 7</kbd>
             </button>
 
-            <div class="gen-item-group">
+            <div class="gen-item-group" role="listitem">
               <div class="gen-item-group__header">
-                <button class="gen-item gen-item--grow" data-type="password">
+                <button
+                  class="gen-item gen-item--grow"
+                  data-type="password"
+                  data-shortcut="8"
+                >
                   <svg
                     class="gen-item__icon"
                     viewBox="0 0 24 24"
@@ -313,15 +380,20 @@
                       ry="2"
                     ></rect>
                   </svg>
-                  <span>Generate Password</span>
+                  <span class="gen-item__body">
+                    <span class="gen-item__label">Password</span>
+                    <span class="gen-item__description">16 chars with letters, numbers, symbols</span>
+                  </span>
+                  <kbd class="gen-item__shortcut">Alt 8</kbd>
                 </button>
 
                 <button
                   class="gen-item__toggle-btn"
                   aria-expanded="false"
                   aria-controls="password-options"
-                  title="Options"
+                  title="Password options"
                 >
+                  <span>Options</span>
                   <svg
                     class="gen-item__chevron"
                     viewBox="0 0 24 24"
@@ -330,6 +402,7 @@
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
                   >
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
