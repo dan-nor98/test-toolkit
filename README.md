@@ -84,6 +84,10 @@ This extension is built with **Manifest V3** and pure, "vanilla" JavaScript (ES6
 * **`curlParser.js`**: A utility class (`CurlParser`) with static methods to parse raw `curl` command strings into `fetch()` compatible URL and options objects.
 * **`generators.js`**: A utility class (`DataGenerators`) with static methods for generating all the required test data, including logic for Luhn checks (bank cards) and IBAN validation.
 
+## TODO
+
+* Add cURL parser test coverage before expanding edge-case parsing further. Current parser limitations may include unsupported shell expansions, config-file directives, multipart form flags, and less common cURL options.
+
 ## Privacy & Offline Behavior
 
 DevToolkit Pro is designed to run without third-party UI assets. The popup and API tester use extension-local CSS and a system font stack instead of loading Google Fonts or other remote font resources, so opening the extension does not make font requests to external services.
