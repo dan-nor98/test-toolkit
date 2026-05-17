@@ -1,109 +1,202 @@
 # DevToolkit Pro
 
-&gt; A professional, all-in-one browser toolkit for developers.
+> A local-first Chromium extension that bundles everyday developer utilities into one fast popup and tab-based toolkit.
 
-DevToolkit Pro is a lightweight and powerful Chrome extension designed to streamline common development tasks. It combines a persistent clipboard manager, a flexible data generator, and an API tester into a single, convenient package.
+DevToolkit Pro is a Manifest V3 browser extension for developers, QA engineers, support teams, and power users who repeatedly copy data from pages, fill test forms, format JSON, inspect API responses, and manage one-time-password secrets during local development. Instead of juggling separate clipboard managers, fake-data generators, JSON formatters, API clients, and authenticator helpers, DevToolkit Pro keeps those workflows close to the browser with a compact popup, a dedicated API tester page, and right-click autofill actions.
 
-This project was built to replace the need for multiple, separate utilities and keep essential tools just a click away.
+The project is designed as a local unpacked extension: data stays on your machine unless you copy, export, sync, or otherwise share it yourself. Because the extension can run on all URLs and can store copied text locally, review the permissions and privacy notes before installing it in a browser profile that handles sensitive production data.
 
 ---
 
-## Features
+## Feature Matrix
 
-* **Clipboard Manager**
-    * **Persistent History:** Automatically captures and logs text you copy from websites when capture is enabled.
-    * **Local Settings:** Pause/resume capture, set the maximum history size, choose an optional retention period, and block capture on specific domains.
-    * **IndexedDB Storage:** History is saved locally and persistently using IndexedDB, managed by the service worker.
-    * **One-Click Copy:** Click any entry in the history list to instantly copy it back to your clipboard.
-    * **Clear History:** A simple button to clear all saved clipboard entries.
-
-* **Data Generator**
-    * **One-Click Generation:** Quickly generate common data types needed for testing forms and populating databases.
-    * **Available Data:** Includes Persian Name, Phone Number, National Code, Bank Card, Sheba (IBAN), and Email.
-    * **Easy Copy:** Generated data appears in an output box with a "Copy" button.
-
-* **API Tester (in a Dedicated Tab)**
-    * **cURL Parser:** Automatically parses pasted `curl` commands to set up the request.
-    * **Full-Featured:** Supports different methods (GET, POST, etc.), custom headers (`-H`), and raw data bodies (`--data-raw`).
-    * **Syntax Highlighting:** Displays formatted JSON responses with clear syntax highlighting for easy reading.
-    * **Request Info:** Shows the response status code (`200 OK`, `404 Not Found`, etc.) and the total request time in milliseconds.
-
-* **General UI/UX**
-    * **Modern Dark UI:** A sleek, dark-mode interface that's easy on the eyes.
-    * **Resizable Popup:** The main popup window can be resized, allowing you to see more clipboard history or generator options.
-    * **Notifications:** Provides toast notifications for actions like "Copied to clipboard!".
+| Area | What it does | Primary entry points | Storage / privacy notes |
+| --- | --- | --- | --- |
+| Clipboard | Captures copied text from web pages when capture is enabled, shows persistent history, supports one-click recopy, max-entry limits, retention settings, blocked domains, and clear-history controls. | `content.js`, `background.js`, `popup.js` | Clipboard history is stored locally in IndexedDB. Copied page text can include passwords, tokens, customer data, or other sensitive values. |
+| Data Generator | Generates common test values such as Persian names, phone numbers, national codes, bank cards, Sheba / IBAN values, and email addresses. | `generators.js`, `popup.js` | Generated output is copied only when you press copy or use autofill actions. |
+| API Tester | Opens a dedicated API tester tab, parses pasted cURL commands, lets you configure requests, sends requests, and displays response status, timing, headers, and formatted JSON responses. | `api-tester.html`, `popup.js`, `curlParser.js` | Request history / saved collections are stored locally by the extension UI. Avoid storing production secrets. |
+| JSON Formatter | Parses, validates, pretty-prints, and syntax-highlights JSON pasted into the popup. | `popup.html`, `popup.js` | Formatting happens locally in the extension UI. |
+| Authenticator | Imports manual Base32 secrets or `otpauth://` URIs, optionally reads QR images when supported by the browser, and displays TOTP codes for local workflows. | `popup.html`, `popup.js` | Treat OTP secrets as sensitive. Do not store production MFA secrets in this local tool unless you have reviewed the implementation and retention behavior. |
+| Context-menu autofill | Adds right-click generator actions for editable fields and injects generated values into the field that opened the context menu. | `background.js`, `content.js`, `generators.js` | Requires page access so the content script can identify and update editable fields. |
 
 ---
 
 ## Screenshots
 
+Add screenshots under `docs/screenshots/` so visitors can understand the extension before loading it:
+
+| Screen | Suggested file | What to capture |
+| --- | --- | --- |
+| Popup overview | `docs/screenshots/popup.png` | Main popup with the Clipboard, Generator, JSON, and Authenticator tabs visible in the navigation. |
+| Clipboard history | `docs/screenshots/clipboard.png` | Clipboard tab with several non-sensitive sample entries and settings expanded. |
+| Data generator | `docs/screenshots/generator.png` | Generator tab showing generated sample output and copy controls. |
+| API tester | `docs/screenshots/api-tester.png` | Dedicated API tester tab after executing a safe sample request. |
+| JSON formatter | `docs/screenshots/json-formatter.png` | JSON Formatter tab showing formatted sample JSON. |
+| Authenticator | `docs/screenshots/authenticator.png` | Authenticator tab using a disposable demo secret only. |
+| Context-menu autofill | `docs/screenshots/context-menu-autofill.png` | Browser context menu opened on a local test form field. |
+
+Screenshot guidelines:
+
+1. Use fake, disposable, or redacted data only.
+2. Do not capture production tokens, real clipboard history, real customer data, or personal MFA secrets.
+3. Keep image dimensions consistent where possible, for example 1280×800 for tab pages and the natural popup size for popup screenshots.
+
 ---
 
-## Installation
+## Installation: Load the Unpacked Chrome Extension
 
-Since this extension is not yet on the Chrome Web Store, you can load it locally:
+DevToolkit Pro is not packaged for the Chrome Web Store in this repository. Load it as an unpacked extension during development or local use:
 
-1.  Download or clone this repository to your local machine.
-2.  Open the Chrome browser and navigate to `chrome://extensions`.
-3.  Enable **"Developer mode"** in the top-right corner.
-4.  Click the **"Load unpacked"** button.
-5.  Select the directory where you saved the project files.
-6.  The DevToolkit Pro icon will appear in your browser's toolbar.
+1. Clone or download this repository.
+2. Open a Chromium browser such as Chrome, Edge, Brave, or another Manifest V3-compatible browser.
+3. Navigate to `chrome://extensions`.
+4. Enable **Developer mode**.
+5. Select **Load unpacked**.
+6. Choose the repository directory that contains `manifest.json`.
+7. Confirm that **DevToolkit Pro** appears in the extensions list and pin it to the toolbar if desired.
+8. Review the extension details page so you understand the requested permissions before using it on sensitive sites.
 
 ---
 
 ## How to Use
 
-* **Clipboard History:**
-    1.  Copy text from a webpage. When capture is enabled and the current domain is not blocked, the extension's content script logs the selected text.
-    2.  Click the extension icon and go to the **Clipboard** tab to see your history. Click any entry to re-copy it.
-    3.  Use **Clipboard Settings** to pause/resume capture, limit saved entries, set an optional retention period, or enter blocked domains (one per line).
+### Clipboard History
 
-* **Data Generator:**
-    1.  Open the extension and click the **Generator** tab.
-    2.  Click any button (e.g., "Persian Name", "Bank Card") to generate new data.
-    3.  The generated data will appear in the output box. Click "Copy" to use it.
+1. Copy text from a webpage.
+2. When capture is enabled and the domain is not blocked, `content.js` sends the copied text to the service worker.
+3. Open the extension popup and select the **Clipboard** tab.
+4. Click an entry to copy it back to the clipboard.
+5. Use Clipboard Settings to pause capture, limit saved entries, configure retention, block domains, or clear history.
 
-* **API Tester:**
-    1.  Open the extension and click the **API Tester** tab.
-    2.  Click the **"Open API Tester"** button. This will open the tool in a new, dedicated browser tab.
-    3.  Paste a full `curl` command (e.g., from your browser's Network tab) into the text area.
-    4.  Click **"Execute Request"**.
-    5.  The response body, status, and time will appear below.
+### Data Generator
+
+1. Open the extension popup and select the **Generator** tab.
+2. Choose a generator such as Persian Name, Phone Number, National Code, Bank Card, Sheba, or Email.
+3. Copy the generated value or use the context-menu autofill feature on editable fields.
+
+### API Tester
+
+1. Open the extension popup and select the **API Tester** tab.
+2. Click **Open API Tester** to launch the dedicated tab.
+3. Paste a full `curl` command or manually configure the request.
+4. Execute the request.
+5. Review status, timing, headers, and response output.
+
+### JSON Formatter
+
+1. Open the **JSON** tab.
+2. Paste JSON into the input area.
+3. Format it to validate and pretty-print the payload.
+4. Copy the formatted output if needed.
+
+### Authenticator
+
+1. Open the **Authenticator** tab.
+2. Paste a disposable Base32 secret or `otpauth://` URI.
+3. If your browser supports QR detection, import a QR image for local test credentials.
+4. Use generated TOTP codes only for development or disposable accounts unless you have reviewed the security implications.
 
 ---
 
-## Browser Support
+## Developer Workflow
 
-QR import for the Authenticator tool uses the browser-native `BarcodeDetector` API. If your browser does not provide `BarcodeDetector` with QR-code support, uploaded QR images cannot be decoded in the extension. In that case, paste the manual `otpauth://` URI or the Base32 secret key into the Authenticator input instead.
+### Repository Structure
+
+```text
+.
+├── api-tester.html       # Dedicated API tester page
+├── background.js         # Manifest V3 service worker and context-menu handlers
+├── content.js            # Page content script for copy capture and autofill injection
+├── curlParser.js         # cURL-to-request parser utility
+├── generators.js         # Test data generator utility methods
+├── icons/                # Extension icons
+├── manifest.json         # Extension manifest, permissions, scripts, and action config
+├── popup.css             # Popup and API tester styles
+├── popup.html            # Main extension popup UI
+├── popup.js              # Popup, API tester, JSON formatter, and authenticator controller
+└── README.md             # Project documentation
+```
+
+### Main Entry Points
+
+- `manifest.json` defines the Manifest V3 extension metadata, permissions, `host_permissions`, service worker, content scripts, popup, and icons.
+- `background.js` runs as the extension service worker. It manages clipboard persistence, receives messages from content scripts, creates context menus, and coordinates autofill values.
+- `content.js` runs on matched pages. It listens for copy events, tracks editable context-menu targets, and applies generated autofill values.
+- `popup.js` controls the popup UI, API tester page, JSON formatter, authenticator import flow, clipboard UI, and local UI state.
+- `generators.js` contains reusable fake-data generation helpers.
+- `curlParser.js` parses pasted cURL commands into request details the API tester can execute.
+
+### Reload After Changes
+
+1. Save your code changes.
+2. Open `chrome://extensions`.
+3. Find **DevToolkit Pro**.
+4. Click the reload icon on the extension card.
+5. Refresh any web pages where you are testing `content.js`, because content scripts already injected into a page may not update until the page reloads.
+6. Reopen the popup or API tester tab so the latest `popup.html`, `popup.css`, and `popup.js` are loaded.
+
+### Inspect Logs
+
+- **Popup logs:** Right-click the extension popup and select **Inspect**, or open the popup and use the extension inspection link from `chrome://extensions`. Console output from popup UI code appears in that DevTools window.
+- **Service worker logs:** Go to `chrome://extensions`, enable Developer mode, find DevToolkit Pro, and click the **service worker** inspection link. Console output from `background.js` appears there.
+- **Content script logs:** Open DevTools on the target webpage. Console output from `content.js` appears in the page's DevTools context.
+- **API tester logs:** Open DevTools for the dedicated API tester tab like a normal web page.
 
 ---
 
-## Tech Stack & Project Structure
+## Permissions and Privacy Notes
 
-This extension is built with **Manifest V3** and pure, "vanilla" JavaScript (ES6+) for maximum performance and minimal overhead.
+### Permissions
 
-* **`manifest.json`**: Defines the extension, permissions (`storage`, `host_permissions`), and entry points.
-* **`background.js`**: A persistent service worker that manages the core `ClipboardManager` class. It listens for messages from content scripts and handles saving data to IndexedDB.
-* **`content.js`**: Injected into web pages to listen for `copy` events and send the copied text to the background script.
-* **`popup.html` / `api-tester.html`**: The HTML files for the main popup and the dedicated API tester tab.
-* **`popup.css`**: Contains all styles for the extension, using CSS variables for easy theming.
-* **`popup.js`**: The main controller (`PopupController`) for the UI. It's context-aware and runs different logic depending on whether it's loaded in the popup or the `api-tester.html` tab. It manages tab switching, IndexedDB read/clear operations, and all UI event listeners.
-* **`curlParser.js`**: A utility class (`CurlParser`) with static methods to parse raw `curl` command strings into `fetch()` compatible URL and options objects.
-* **`generators.js`**: A utility class (`DataGenerators`) with static methods for generating all the required test data, including logic for Luhn checks (bank cards) and IBAN validation.
+- `storage` allows extension settings and local UI data to be saved.
+- `contextMenus` enables right-click generator / autofill actions on editable fields.
+- `scripting` and `tabs` support extension interactions with browser tabs and content scripts.
+- `host_permissions: ["<all_urls>"]` allows the extension's content script and extension logic to run across websites matched by the manifest. This broad access is needed for clipboard capture from pages and context-menu autofill on arbitrary sites, but it also means you should review the source and only install it in browser profiles where that level of access is acceptable.
 
-## TODO
+### Clipboard Data
 
-* Add cURL parser test coverage before expanding edge-case parsing further. Current parser limitations may include unsupported shell expansions, config-file directives, multipart form flags, and less common cURL options.
-* Evaluate adding a local QR decoding fallback library if the project adopts a policy that permits vendored dependencies.
+Clipboard history is stored locally in the extension's IndexedDB database. The project does not intentionally send clipboard history to a remote service, but locally stored clipboard values can still be sensitive.
 
-## Privacy & Offline Behavior
+Copied text from pages can include:
 
-**Clipboard privacy note:** DevToolkit Pro listens for browser `copy` events on webpages where the content script is allowed to run. When clipboard capture is enabled, the selected copied text is sent to the extension's background service worker and stored locally in the extension's IndexedDB clipboard history. Clipboard settings are stored locally with `chrome.storage.local`; these settings let you pause capture, cap the maximum number of saved entries, remove entries after an optional retention period, and skip capture on blocked domains. Clipboard history and settings stay on your device unless you manually export, copy, sync, or otherwise share them outside the extension.
+- Passwords or one-time codes.
+- API keys, bearer tokens, cookies, or session identifiers.
+- Customer records, internal notes, or personal data.
+- Private URLs or query strings containing secrets.
 
-DevToolkit Pro is designed to run without third-party UI assets. The popup and API tester use extension-local CSS and a system font stack instead of loading Google Fonts or other remote font resources, so opening the extension does not make font requests to external services.
+Pause capture, block sensitive domains, clear history regularly, and avoid using this extension on production systems until retention controls and security review meet your requirements.
 
-If exact font rendering is required in the future, add the font files to a dedicated extension-local assets directory such as `fonts/` and load them from `popup.css` with `@font-face` rules that reference those local files.
+### Offline / Remote Asset Behavior
+
+The UI is built with local HTML, CSS, and JavaScript. It does not require third-party UI assets or remote fonts to open the popup or API tester.
+
+---
+
+## Browser Support Notes
+
+- DevToolkit Pro targets **Manifest V3 Chromium browsers**, including current versions of Google Chrome and other Chromium-based browsers that support MV3 extension APIs.
+- Firefox and Safari are not currently documented as supported targets for this codebase.
+- QR import in the Authenticator tool depends on the browser-native `BarcodeDetector` API with QR-code support. Some Chromium builds or operating systems may not provide `BarcodeDetector`, may not support the `qr_code` format, or may gate the feature behind browser implementation details.
+- If QR import is unavailable, paste the manual `otpauth://` URI or Base32 secret instead.
+
+---
+
+## TODO / Roadmap
+
+- Add automated tests for `CurlParser`, including headers, methods, request bodies, quoted values, and malformed input.
+- Add secure random generation for passwords and UUIDs using browser cryptography APIs where appropriate.
+- Improve cURL parsing for additional flags, multipart forms, compressed requests, repeated headers, shell quoting, and edge cases copied from browser DevTools.
+- Add clipboard retention controls that are easier to audit, including expiration visibility, per-entry deletion, and safer defaults for sensitive data.
+- Add import/export for saved API collections so local request sets can be backed up or moved between development profiles.
+
+---
+
+## Notes for Visitors
+
+- This repository contains a **local unpacked extension**, not a Chrome Web Store listing.
+- Review `manifest.json`, requested permissions, and privacy behavior before installing.
+- Do not store production secrets, real MFA seeds, customer data, or sensitive clipboard values unless and until retention controls and your operational security requirements are in place.
+- Prefer a dedicated development browser profile for testing this extension.
 
 ---
 
