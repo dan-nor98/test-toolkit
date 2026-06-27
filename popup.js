@@ -704,7 +704,7 @@ class PopupController {
     request.onerror = () => {
       if (container) {
         container.setAttribute('aria-busy', 'false');
-        container.innerHTML = '<div class="empty-state">Clipboard history could not load.</div>';
+        container.innerHTML = '<div class="empty-state"><p>Clipboard history could not load. Reopen the popup or check capture settings.</p></div>';
       }
       this.showToast('Clipboard history failed to load', 'error');
     };
@@ -721,9 +721,9 @@ class PopupController {
     container.setAttribute('aria-busy', 'false');
 
     if (!entries || entries.length === 0) {
-      const emptyState = filterText ? `<div class="empty-state"><p>No matches found</p></div>` : `
+      const emptyState = filterText ? `<div class="empty-state"><p>No clipboard matches. Try a different search term.</p></div>` : `
         <div class="empty-state">
-          <p>No clipboard entries yet</p>
+          <p>Copy text from any page to start building local clipboard history.</p>
         </div>
       `;
       container.innerHTML = emptyState;
@@ -1058,12 +1058,12 @@ class PopupController {
     container.setAttribute('aria-busy', 'false');
 
     if (!this.currentWebsiteKey) {
-      container.innerHTML = '<div class="empty-state">Todo list is unavailable for this page.</div>';
+      container.innerHTML = '<div class="empty-state"><p>Open a website tab to add notes and todos for that site.</p></div>';
       return;
     }
 
     if (!todos.length) {
-      container.innerHTML = '<div class="empty-state">No website todos yet.</div>';
+      container.innerHTML = '<div class="empty-state"><p>Add a task above to track follow-ups for this website.</p></div>';
       return;
     }
 
@@ -1265,7 +1265,7 @@ class PopupController {
       colList.setAttribute('aria-busy', 'false');
       colList.innerHTML = '';
       if (collections.length === 0) {
-        colList.innerHTML = '<li class="empty-msg">No saved requests</li>';
+        colList.innerHTML = '<li class="empty-msg">Save a cURL request to reuse it here.</li>';
       } else {
         collections.forEach(item => {
           const li = document.createElement('li');
@@ -1312,7 +1312,7 @@ class PopupController {
       histList.setAttribute('aria-busy', 'false');
       histList.innerHTML = '';
       if (history.length === 0) {
-        histList.innerHTML = '<li class="empty-msg">No recent history</li>';
+        histList.innerHTML = '<li class="empty-msg">Run a request to add it to history.</li>';
       } else {
         history.forEach(curl => {
           const li = document.createElement('li');
