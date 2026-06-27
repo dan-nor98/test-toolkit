@@ -1384,9 +1384,18 @@ class PopupController {
       ? state
       : 'idle';
 
+    const stateLabels = {
+      idle: 'Idle',
+      loading: 'Running request',
+      success: 'Request succeeded',
+      error: 'Request error',
+      cancelled: 'Request cancelled',
+      timeout: 'Request timed out'
+    };
+
     if (responseState) {
       responseState.className = `status-pill status-pill--${normalizedState}`;
-      responseState.textContent = normalizedState;
+      responseState.textContent = stateLabels[normalizedState];
     }
 
     if (statusBadge) {
@@ -1397,9 +1406,9 @@ class PopupController {
         idle: 'var(--text-muted)',
         loading: 'var(--primary)',
         success: 'var(--success)',
-        error: 'var(--danger)',
-        cancelled: '#f59e0b',
-        timeout: 'var(--danger)'
+        error: 'var(--text-muted)',
+        cancelled: 'var(--text-muted)',
+        timeout: 'var(--text-muted)'
       };
       statusBadge.style.color = statusColors[normalizedState] || 'var(--text-muted)';
     }
@@ -1493,7 +1502,7 @@ class PopupController {
       }
 
       statusBadge.textContent = statusText;
-      statusBadge.style.color = response.ok ? 'var(--success)' : 'var(--danger)';
+      statusBadge.style.color = response.ok ? 'var(--success)' : 'var(--text-muted)';
       timeBadge.textContent = `${duration}ms`;
       if (responseHeaders) {
         responseHeaders.textContent = this.formatResponseHeaders(response.headers);
@@ -1509,7 +1518,7 @@ class PopupController {
 
       responseBody.textContent = message;
       statusBadge.textContent = wasAborted ? message : 'Error';
-      statusBadge.style.color = 'var(--danger)';
+      statusBadge.style.color = 'var(--text-muted)';
       timeBadge.textContent = '—';
       if (responseHeaders) {
         responseHeaders.textContent = 'No response headers.';
