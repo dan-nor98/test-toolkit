@@ -138,7 +138,37 @@
 }
 * {
   box-sizing: border-box;
+}
+
+
+/* Shared keyboard focus treatment for interactive controls. */
+:where(
+  button,
+  [href],
+  input,
+  select,
+  textarea,
+  summary,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"])
+):focus {
   outline: none;
+}
+
+:where(
+  button,
+  [href],
+  input,
+  select,
+  textarea,
+  summary,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  border-color: var(--color-accent-border);
+  box-shadow: var(--shadow-focus);
+  outline: 2px solid var(--color-accent-border);
+  outline-offset: 2px;
 }
 
 body {
@@ -777,7 +807,20 @@ body {
 }
 
 .toggle-input {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.toggle-input:focus-visible + .toggle-track {
+  border-color: var(--color-accent-border);
+  box-shadow: var(--shadow-focus);
+  outline: 2px solid var(--color-accent-border);
+  outline-offset: 2px;
 }
 
 .toggle-track {
@@ -1292,7 +1335,8 @@ textarea {
   align-items: center;
 }
 
-.req-item:hover .req-delete {
+.req-item:hover .req-delete,
+.req-item:focus-within .req-delete {
   opacity: 1;
 }
 .req-delete:hover {
@@ -2147,10 +2191,10 @@ textarea::placeholder,
   color: var(--color-text-tertiary);
 }
 
-input:focus,
-textarea:focus,
+input:focus-visible,
+textarea:focus-visible,
 .command-input-wrap:focus-within,
-select:focus {
+select:focus-visible {
   border-color: var(--color-accent-border);
   box-shadow: var(--shadow-focus);
 }
@@ -2248,10 +2292,11 @@ select {
 }
 
 .command-input-wrap:focus-within,
-input:focus,
-textarea:focus,
-select:focus {
-  box-shadow: none;
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: var(--color-accent-border);
+  box-shadow: var(--shadow-focus);
 }
 
 .tab-btn.active {

@@ -1270,6 +1270,9 @@ class PopupController {
         collections.forEach(item => {
           const li = document.createElement('li');
           li.className = 'req-item';
+          li.tabIndex = 0;
+          li.setAttribute('role', 'button');
+          li.setAttribute('aria-label', `Load saved request ${item.name}`);
 
           const span = document.createElement('span');
           span.className = 'req-name';
@@ -1291,6 +1294,12 @@ class PopupController {
           li.addEventListener('click', () => {
             this.loadCurlIntoInput(item.curl);
           });
+          li.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.loadCurlIntoInput(item.curl);
+            }
+          });
 
           colList.appendChild(li);
         });
@@ -1308,6 +1317,8 @@ class PopupController {
         history.forEach(curl => {
           const li = document.createElement('li');
           li.className = 'req-item';
+          li.tabIndex = 0;
+          li.setAttribute('role', 'button');
 
           const preview = curl.length > 30 ? curl.substring(0, 30) + '...' : curl;
 
@@ -1316,11 +1327,18 @@ class PopupController {
           span.style.fontFamily = 'monospace';
           span.style.fontSize = '11px';
           span.textContent = preview;
+          li.setAttribute('aria-label', `Load request from history: ${preview}`);
           li.appendChild(span);
 
           // Load Event
           li.addEventListener('click', () => {
             this.loadCurlIntoInput(curl);
+          });
+          li.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.loadCurlIntoInput(curl);
+            }
           });
 
           histList.appendChild(li);
