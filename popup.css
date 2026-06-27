@@ -145,7 +145,7 @@ body {
   width: 400px;
   height: 600px; /* Fixed height for consistency */
   margin: 0;
-  background-color: var(--color-bg);
+  background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
@@ -173,7 +173,7 @@ body {
 
 /* --- Header --- */
 .app-header {
-  padding: var(--space-6) var(--space-9) var(--space-5);
+  padding: var(--space-4) var(--space-8) var(--space-3);
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
   display: flex;
@@ -220,7 +220,7 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-5);
-  min-height: 42px;
+  min-height: 36px;
   padding: 0 var(--space-6);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -264,13 +264,13 @@ body {
 
 .workspace-shell {
   display: grid;
-  grid-template-columns: 118px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   background: var(--color-bg);
 }
 
 .tool-rail {
   min-height: 0;
-  padding: var(--space-8) var(--space-5) var(--space-8) var(--space-8);
+  padding: var(--space-5) var(--space-3);
   overflow-y: auto;
   border-right: 1px solid var(--color-border);
   background: var(--color-bg);
@@ -286,7 +286,7 @@ body {
 .tabs {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-5);
 }
 
 .tab-group {
@@ -298,6 +298,7 @@ body {
 
 .tab-group-title {
   margin: 0;
+  overflow: hidden;
   color: var(--color-text-muted);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-bold);
@@ -307,11 +308,12 @@ body {
 
 .tab-btn {
   width: 100%;
-  min-height: 32px;
+  min-height: 34px;
   background: var(--color-surface-translucent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-4);
+  justify-content: center;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -322,6 +324,62 @@ body {
   align-items: center;
   gap: var(--space-4);
   text-align: left;
+}
+
+.tab-btn::before {
+  content: attr(data-icon);
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tab-btn span,
+.tab-group-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.workspace-shell:has(.tool-rail:hover),
+.workspace-shell:has(.tool-rail:focus-within) {
+  grid-template-columns: 132px minmax(0, 1fr);
+}
+
+.tool-rail:hover,
+.tool-rail:focus-within {
+  padding-inline: var(--space-5);
+}
+
+.tool-rail:hover .tab-group-title,
+.tool-rail:focus-within .tab-group-title,
+.tool-rail:hover .tab-btn span,
+.tool-rail:focus-within .tab-btn span {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+.tool-rail:hover .tab-btn,
+.tool-rail:focus-within .tab-btn {
+  justify-content: flex-start;
+  padding-inline: var(--space-4);
 }
 
 .tab-btn:hover {
@@ -359,7 +417,7 @@ body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-8);
+  padding: var(--space-5) var(--space-6);
   animation: fadeIn var(--transition-fast);
 }
 .tab-content.active {
@@ -1793,7 +1851,9 @@ textarea {
 
 
 @media (max-width: 380px) {
-  .workspace-shell {
+  .workspace-shell,
+  .workspace-shell:has(.tool-rail:hover),
+  .workspace-shell:has(.tool-rail:focus-within) {
     grid-template-columns: 1fr;
   }
 
@@ -1806,6 +1866,17 @@ textarea {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-5);
+  }
+
+  .tab-btn span,
+  .tab-group-title {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 }
 
@@ -2061,4 +2132,64 @@ select:focus {
 .output-block,
 .result-output {
   background: var(--color-surface-inset);
+}
+
+
+/* --- Compact Linear popup refinement --- */
+body {
+  background: var(--color-bg);
+  text-shadow: none;
+}
+
+body::before {
+  content: none;
+}
+
+.app-header,
+.command-bar,
+.workspace-shell,
+.tool-rail,
+#api-tester-body {
+  background: var(--color-bg);
+}
+
+.app-header,
+.command-bar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.title {
+  line-height: var(--line-height-tight);
+  background: none;
+  color: var(--color-text);
+  -webkit-text-fill-color: currentColor;
+}
+
+.command-input-wrap,
+.context-pill,
+.tab-btn,
+.panel-card,
+.gen-container,
+.clipboard-settings,
+.textarea-field,
+input[type="text"],
+input[type="search"],
+input[type="number"],
+textarea,
+select {
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.command-input-wrap:focus-within,
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: none;
+}
+
+.tab-btn.active {
+  box-shadow: inset 2px 0 0 var(--color-accent);
 }
