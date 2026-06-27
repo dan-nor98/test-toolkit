@@ -509,7 +509,7 @@
                 class="empty-state empty-state--inline"
                 aria-label="Generator result empty state"
               >
-                Choose a generator to create your first value.
+                Choose a generator, adjust options if needed, then select Generate.
               </div>
 
               <div
@@ -573,7 +573,7 @@
               </div>
 
               <div id="jsonEmptyState" class="empty-state empty-state--inline">
-                Formatted JSON will appear after you run the formatter.
+                Paste JSON, then select Format to validate and prettify it.
               </div>
 
               <div
@@ -735,25 +735,12 @@
 
             <div class="panel-body">
               <div class="empty-state api-empty-state">
-            <svg
-              class="api-empty-state__icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-              ></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
+                <p class="api-empty-state__message">
+                  Open the full API workspace to paste cURL, run requests, and save useful calls.
+                </p>
                 <button id="openApiTab" class="btn btn-primary btn-spaced-lg">
                   Open in New Tab
                 </button>
-                <p class="api-empty-state__message">
-                  API Tester requires more space than the popup can provide.
-                </p>
                 <div
                   class="skeleton-list skeleton-list--api"
                   aria-label="Loading API history and collections"

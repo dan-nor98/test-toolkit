@@ -577,7 +577,7 @@ body {
 .action-row {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .action-row--end {
@@ -1226,20 +1226,13 @@ textarea {
 
 /* --- Popup API Placeholder --- */
 .api-empty-state {
-  padding-top: var(--space-16);
-}
-
-.api-empty-state__icon {
-  width: 48px;
-  height: 48px;
-  color: var(--color-text-muted);
-  opacity: 0.5;
-  margin-bottom: var(--space-8);
+  padding-top: var(--space-8);
 }
 
 .api-empty-state__message {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-md);
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-sm);
+  margin: 0 0 var(--space-5);
 }
 
 /* --- API Tester Layout --- */
@@ -1346,10 +1339,8 @@ textarea {
 /* Utility */
 .empty-msg {
   font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  font-style: italic;
-  padding: var(--space-4);
-  opacity: 0.6;
+  color: var(--color-text-subtle);
+  padding: var(--space-3) var(--space-2);
 }
 /* --- Authenticator --- */
 .auth-card {
@@ -1500,18 +1491,22 @@ textarea {
 }
 
 .empty-state {
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
   text-align: center;
-  padding: var(--space-9);
+  padding: var(--space-6);
   background: var(--color-surface-panel-muted);
-  border: 1px dashed var(--color-muted-border);
+  border: 1px solid var(--color-muted-border);
   border-radius: var(--radius-md);
 }
 
+.empty-state p {
+  margin: 0;
+}
+
 .empty-state--inline {
-  padding: var(--space-6);
+  padding: var(--space-5);
 }
 
 /* --- API Tester Two-Column Workspace --- */
@@ -1685,10 +1680,9 @@ textarea {
 }
 
 .empty-msg {
-  padding: var(--space-5) var(--space-1);
-  color: var(--color-text-muted);
+  padding: var(--space-3) var(--space-1);
+  color: var(--color-text-subtle);
   font-size: var(--font-size-sm);
-  font-style: italic;
 }
 
 .status-pill {
@@ -1874,7 +1868,7 @@ textarea {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-sm);
-  background: var(--color-muted-bg-strong);
+  background: var(--color-muted-bg);
 }
 
 .skeleton-row::after {
@@ -1887,15 +1881,15 @@ textarea {
 }
 
 .skeleton-row--clipboard {
-  height: 58px;
+  height: 52px;
 }
 
 .skeleton-row--todo {
-  height: 42px;
+  height: 38px;
 }
 
 .skeleton-row--api {
-  height: 34px;
+  height: 30px;
 }
 
 @keyframes shimmer {
