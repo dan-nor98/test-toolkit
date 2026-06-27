@@ -262,6 +262,15 @@ body {
   color: var(--color-text-muted);
 }
 
+.command-search-status {
+  min-height: var(--space-8);
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
 .workspace-shell {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);

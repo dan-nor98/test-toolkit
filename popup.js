@@ -142,6 +142,7 @@ class PopupController {
         e.preventDefault();
       }
     });
+    this.updateCommandSearchStatus('');
 
     document.getElementById('clearClipboard')?.addEventListener('click', () => {
       this.clearClipboard();
@@ -518,6 +519,29 @@ class PopupController {
       const hasVisibleTools = Boolean(group.querySelector('.tab-btn:not(.is-hidden)'));
       group.classList.toggle('is-empty', !hasVisibleTools);
     });
+
+    this.updateCommandSearchStatus(normalizedQuery);
+  }
+
+  updateCommandSearchStatus(query) {
+    const status = document.getElementById('commandSearchStatus');
+    if (!status) return;
+
+    const visibleTools = document.querySelectorAll('.tab-btn:not(.is-hidden)').length;
+    const totalTools = document.querySelectorAll('.tab-btn').length;
+
+    if (!query) {
+      status.textContent = `Type to filter tools. ${totalTools} tools available.`;
+      return;
+    }
+
+    if (visibleTools === 0) {
+      status.textContent = 'No matching tools.';
+      return;
+    }
+
+    const resultLabel = visibleTools === 1 ? 'tool' : 'tools';
+    status.textContent = `${visibleTools} ${resultLabel} found. Enter opens first match.`;
   }
 
   switchTab(tabName) {
