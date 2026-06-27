@@ -529,6 +529,11 @@ class PopupController {
       const isActive = btn.dataset.tab === tabName;
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-selected', String(isActive));
+      if (isActive) {
+        btn.setAttribute('aria-current', 'page');
+      } else {
+        btn.removeAttribute('aria-current');
+      }
     });
 
     document.querySelectorAll('.tab-content').forEach(content => {
