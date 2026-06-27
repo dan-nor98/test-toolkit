@@ -171,15 +171,27 @@
   outline-offset: 2px;
 }
 
+html:has(> body#popup-body) {
+  min-width: 560px;
+  min-height: 720px;
+}
+
 body {
-  width: 400px;
-  height: 600px; /* Fixed height for consistency */
+  width: 560px;
+  height: 720px;
+  min-width: 480px;
+  min-height: 600px;
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
   overflow: hidden; /* Hide main scrollbar */
+}
+
+#popup-body {
+  resize: both;
+  overflow: hidden;
 }
 
 /* --- Layout --- */
