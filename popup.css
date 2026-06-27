@@ -2363,3 +2363,96 @@ select:focus-visible {
 .tab-btn.active {
   box-shadow: inset 2px 0 0 var(--color-accent);
 }
+
+/* --- First-use previews --- */
+.tool-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-12);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: none;
+}
+
+.tool-preview-card--compact {
+  padding: var(--space-8);
+}
+
+.tool-preview-card__eyebrow {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tool-preview-card__text {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.tool-preview-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  margin: 0;
+}
+
+.tool-preview-list--inline {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.tool-preview-list div {
+  min-width: 0;
+}
+
+.tool-preview-list dt {
+  margin-bottom: var(--space-2);
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tool-preview-list dd {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-preview-code {
+  margin: 0;
+  padding: var(--space-5);
+  overflow: hidden;
+  background: var(--color-surface-inset);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-relaxed);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.api-launch-preview {
+  width: 100%;
+  text-align: left;
+}
+
+@media (max-width: 380px) {
+  .tool-preview-card {
+    padding: var(--space-8);
+  }
+}
