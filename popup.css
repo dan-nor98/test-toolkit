@@ -1706,6 +1706,7 @@ textarea {
   content: "";
   width: 7px;
   height: 7px;
+  border: 1px solid currentColor;
   border-radius: var(--radius-pill);
   background: currentColor;
 }
@@ -1715,10 +1716,18 @@ textarea {
   background: var(--color-muted-bg);
 }
 
+.status-pill--idle::before {
+  background: transparent;
+}
+
 .status-pill--loading {
   color: var(--color-accent);
   background: var(--color-accent-glow);
   border-color: var(--color-accent-border);
+}
+
+.status-pill--loading::before {
+  border-radius: var(--radius-xs);
 }
 
 .status-pill--success {
@@ -1730,15 +1739,43 @@ textarea {
 .status-pill--error,
 .status-pill--cancelled,
 .status-pill--timeout {
-  color: var(--color-danger);
+  color: var(--color-text-muted);
   background: var(--color-danger-soft);
   border-color: var(--color-danger-border);
 }
 
+.status-pill--error::before {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-xs);
+  background: transparent;
+}
+
 .status-pill--cancelled {
-  color: var(--color-warning);
-  background: var(--color-warning-soft);
-  border-color: var(--color-warning-border);
+  background: var(--color-surface-panel-soft);
+  border-color: var(--color-muted-border);
+  border-style: dashed;
+}
+
+.status-pill--cancelled::before {
+  width: 9px;
+  height: 2px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+
+.status-pill--timeout {
+  background: var(--color-surface-inset);
+  border-color: var(--color-danger-border-strong);
+  box-shadow: inset 0 0 0 1px var(--color-border-muted);
+}
+
+.status-pill--timeout::before {
+  width: 8px;
+  height: 8px;
+  border-style: dotted;
+  background: transparent;
 }
 
 .api-response-card {
