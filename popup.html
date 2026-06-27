@@ -504,13 +504,26 @@
             </div>
               </div>
 
-              <div
+              <aside
                 id="generatorEmptyState"
-                class="empty-state empty-state--inline"
-                aria-label="Generator result empty state"
+                class="tool-preview-card tool-preview-card--compact"
+                aria-label="Generator result preview"
               >
-                Choose a generator, adjust options if needed, then select Generate.
-              </div>
+                <div>
+                  <span class="tool-preview-card__eyebrow">Example result</span>
+                  <p class="tool-preview-card__text">Choose a generator to create copy-ready local test data.</p>
+                </div>
+                <dl class="tool-preview-list tool-preview-list--inline">
+                  <div>
+                    <dt>Name</dt>
+                    <dd>علی رضایی</dd>
+                  </div>
+                  <div>
+                    <dt>UUID</dt>
+                    <dd>3f5c…9a2e</dd>
+                  </div>
+                </dl>
+              </aside>
 
               <div
                 id="generatorOutput"
@@ -572,9 +585,13 @@
                 </button>
               </div>
 
-              <div id="jsonEmptyState" class="empty-state empty-state--inline">
-                Paste JSON, then select Format to validate and prettify it.
-              </div>
+              <aside id="jsonEmptyState" class="tool-preview-card" aria-label="JSON formatting preview">
+                <div>
+                  <span class="tool-preview-card__eyebrow">Preview</span>
+                  <p class="tool-preview-card__text">Paste minified or messy JSON, then format for a validated, copy-ready result.</p>
+                </div>
+                <pre class="tool-preview-code">{"status":"ok","items":[1,2]}</pre>
+              </aside>
 
               <div
                 id="jsonResponse"
@@ -631,9 +648,22 @@
                 </div>
               </div>
 
-              <div id="authEmptyState" class="empty-state empty-state--inline">
-                Loaded authenticator details and codes will appear here.
-              </div>
+              <aside id="authEmptyState" class="tool-preview-card" aria-label="Authenticator result preview">
+                <div>
+                  <span class="tool-preview-card__eyebrow">Result preview</span>
+                  <p class="tool-preview-card__text">Load a QR image, secret key, or otpauth URI to reveal issuer, account, and the current 6-digit code.</p>
+                </div>
+                <dl class="tool-preview-list">
+                  <div>
+                    <dt>Issuer</dt>
+                    <dd>Example App</dd>
+                  </div>
+                  <div>
+                    <dt>Code</dt>
+                    <dd>123 456</dd>
+                  </div>
+                </dl>
+              </aside>
 
               <div id="authDetails" class="result-card is-initially-hidden">
             <div class="auth-meta">
@@ -735,9 +765,11 @@
 
             <div class="panel-body">
               <div class="empty-state api-empty-state">
-                <p class="api-empty-state__message">
-                  Open the full API workspace to paste cURL, run requests, and save useful calls.
-                </p>
+                <aside class="tool-preview-card api-launch-preview" aria-label="API tester workflow preview">
+                  <span class="tool-preview-card__eyebrow">Full workspace</span>
+                  <p class="tool-preview-card__text">Paste cURL, send requests, inspect responses, and save reusable calls with more room.</p>
+                  <pre class="tool-preview-code">curl -X GET https://api.example.test/users</pre>
+                </aside>
                 <button id="openApiTab" class="btn btn-primary btn-spaced-lg">
                   Open in New Tab
                 </button>
