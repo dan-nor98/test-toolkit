@@ -1533,7 +1533,7 @@ textarea {
   justify-content: space-between;
   gap: var(--space-8);
   min-width: 0;
-  padding: var(--space-8) var(--space-9);
+  padding: var(--space-12);
   background: var(--color-surface-panel);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
@@ -1546,7 +1546,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
-  padding: var(--space-9);
+  padding: var(--space-12);
   background: var(--color-surface-panel);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
@@ -1631,9 +1631,8 @@ textarea {
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   font-weight: 650;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .api-preview__method {
@@ -1802,6 +1801,7 @@ textarea {
   max-height: 150px;
   overflow: auto;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   word-break: break-word;
   color: var(--color-text);
   background: var(--color-surface-deep-strong);
@@ -1910,6 +1910,34 @@ textarea {
   }
 }
 
+@media (max-width: 1180px) {
+  #api-tester-body .api-wrapper {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-8);
+    padding: var(--space-10);
+  }
+
+  .api-topbar {
+    gap: var(--space-6);
+    padding: var(--space-8);
+  }
+
+  .api-panel {
+    gap: var(--space-7);
+    padding: var(--space-8);
+  }
+
+  .api-card,
+  .api-response-card {
+    padding: var(--space-6);
+  }
+
+  .api-lists-grid,
+  .api-preview {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   #api-tester-body {
     overflow: auto;
@@ -1926,10 +1954,12 @@ textarea {
   .api-topbar {
     align-items: flex-start;
     flex-direction: column;
+    padding: var(--space-7);
   }
 
   .api-panel {
     overflow: visible;
+    padding: var(--space-7);
   }
 
   .api-lists-grid,
