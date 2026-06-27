@@ -210,7 +210,7 @@
                   ></textarea>
                 </label>
 
-                <p id="clipboardSettingsStatus" class="settings-help">
+                <p id="clipboardSettingsStatus" class="settings-help" aria-live="polite">
                   Settings are stored locally in Chrome storage.
                 </p>
               </div>
@@ -222,11 +222,13 @@
                   </span>
                   <p class="settings-help">
                     Clearing history permanently removes all saved clipboard entries.
+                    Press once to review, then press Confirm clear to continue.
                   </p>
                 </div>
                 <button
                   id="clearClipboard"
-                  class="btn btn-secondary-danger secondary-danger btn-sm"
+                  class="btn btn-secondary-danger secondary-danger btn-sm clear-history-btn"
+                  aria-describedby="clipboardSettingsStatus"
                 >
                   Clear history
                 </button>

@@ -26,6 +26,8 @@ class PopupController {
     this.currentWebsiteKey = '';
     this.currentWebsiteContext = null;
     this.notesSaveTimer = null;
+    this.clearClipboardConfirmTimer = null;
+    this.isClearClipboardPending = false;
 
     if (pageId === 'popup-body') {
       this.initPopup();
@@ -144,8 +146,8 @@ class PopupController {
     });
     this.updateCommandSearchStatus('');
 
-    document.getElementById('clearClipboard')?.addEventListener('click', () => {
-      this.clearClipboard();
+    document.getElementById('clearClipboard')?.addEventListener('click', (e) => {
+      this.handleClearClipboardClick(e.currentTarget);
     });
 
     document.getElementById('clipboardSearch')?.addEventListener('input', (e) => {
@@ -747,14 +749,55 @@ class PopupController {
     });
   }
 
-  async clearClipboard() {
+  handleClearClipboardClick(button) {
     if (!this.db) return;
+
+    if (!this.isClearClipboardPending) {
+      this.setClearClipboardConfirmation(true, button);
+      return;
+    }
+
+    this.clearClipboard(button);
+  }
+
+  setClearClipboardConfirmation(isPending, button = document.getElementById('clearClipboard')) {
+    clearTimeout(this.clearClipboardConfirmTimer);
+    this.isClearClipboardPending = isPending;
+
+    if (button) {
+      button.textContent = isPending ? 'Confirm clear' : 'Clear history';
+      button.classList.toggle('is-confirming', isPending);
+      button.setAttribute('aria-pressed', String(isPending));
+    }
+
+    this.setInlineStatus(
+      'clipboardSettingsStatus',
+      isPending
+        ? 'Confirm clear: press the button again within 8 seconds to permanently clear clipboard history.'
+        : 'Settings are stored locally in Chrome storage.'
+    );
+
+    if (isPending) {
+      this.clearClipboardConfirmTimer = window.setTimeout(() => {
+        this.setClearClipboardConfirmation(false, button);
+      }, 8000);
+    }
+  }
+
+  async clearClipboard(button = document.getElementById('clearClipboard')) {
+    if (!this.db) return;
+    clearTimeout(this.clearClipboardConfirmTimer);
     const tx = this.db.transaction('logs', 'readwrite');
     const store = tx.objectStore('logs');
     store.clear().onsuccess = () => {
+      this.isClearClipboardPending = false;
+      if (button) {
+        button.textContent = 'Clear history';
+        button.classList.remove('is-confirming');
+        button.setAttribute('aria-pressed', 'false');
+      }
       this.loadClipboardHistory();
-      const status = document.getElementById('clipboardSettingsStatus');
-      if (status) status.textContent = 'Clipboard history cleared.';
+      this.setInlineStatus('clipboardSettingsStatus', 'Clipboard history cleared.', 'success');
       this.showToast('Clipboard history cleared');
     };
   }
