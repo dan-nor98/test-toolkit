@@ -326,6 +326,20 @@ body {
   text-align: left;
 }
 
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  left: var(--space-2);
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.8);
+  transition: opacity var(--transition-base), transform var(--transition-base);
+}
+
 .tab-btn::before {
   content: attr(data-icon);
   display: inline-grid;
@@ -392,9 +406,20 @@ body {
   border-color: var(--color-accent);
   background: var(--color-accent-soft);
   color: var(--color-text);
+  font-weight: var(--font-weight-bold);
   box-shadow:
     inset 3px 0 0 var(--color-accent),
     var(--shadow-active);
+}
+
+.tab-btn.active::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.tab-btn.active:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .tab-btn.is-hidden {
@@ -2030,6 +2055,19 @@ button:hover:not(:disabled) {
   border-color: var(--color-accent-border);
   color: var(--color-text);
   box-shadow: inset 3px 0 0 var(--color-accent), inset 0 1px 0 rgba(247, 248, 248, 0.05);
+}
+
+.tab-btn.active {
+  font-weight: var(--font-weight-bold);
+}
+
+.tab-btn.active::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.tab-btn.active:hover {
+  border-color: var(--color-accent-border);
 }
 
 .command-input-icon,
